@@ -1,4 +1,3 @@
-
 import { createLibp2p, Libp2p } from 'libp2p';
 import { noise } from '@libp2p/noise';
 import { mplex } from '@libp2p/mplex';
@@ -20,10 +19,10 @@ export interface MessageEnvelope {
 }
 
 export class BitCommP2PNetwork {
-    private node: Libp2p | null = null;
-    private messageHandlers: Set<(envelope: MessageEnvelope) => void> = new Set();
-    private isInitialized = false;
-    private connectedPeers = new Set<string>();
+  private node: Libp2p | null = null;
+  private messageHandlers: Set<(envelope: MessageEnvelope) => void> = new Set();
+  private isInitialized = false;
+  private connectedPeers = new Set<string>();
 
   async initialize(): Promise<P2PNode> {
     try {
@@ -73,12 +72,14 @@ export class BitCommP2PNetwork {
   private async initializeDemoMode(): Promise<P2PNode> {
     const demoPeerId = 'demo-peer-' + Math.random().toString(36).substring(2, 15)
     
+    // Add some demo peers
     this.connectedPeers.add('peer-' + Math.random().toString(36).substring(2, 8))
     this.connectedPeers.add('peer-' + Math.random().toString(36).substring(2, 8))
     this.connectedPeers.add('peer-' + Math.random().toString(36).substring(2, 8))
 
     this.isInitialized = true
     
+    // Simulate receiving a test message after 5 seconds
     setTimeout(() => {
       this.simulateIncomingMessage()
     }, 5000)
@@ -172,14 +173,8 @@ export class BitCommP2PNetwork {
   }
 
   async findPeersForAddress(bitcommAddress: string): Promise<string[]> {
-    if (!this.node) return []
-    
-    try {
-      return Array.from(this.connectedPeers)
-    } catch (error) {
-      console.error('Error finding peers for address:', error)
-      return []
-    }
+    // Return demo peers that can route to this address
+    return Array.from(this.connectedPeers)
   }
 
   addMessageHandler(handler: (envelope: MessageEnvelope) => void): void {
@@ -191,7 +186,7 @@ export class BitCommP2PNetwork {
   }
 
   getNetworkStats() {
-    if (!this.node || !this.isInitialized) {
+    if (!this.isInitialized) {
       return {
         peerId: 'Not connected',
         connectedPeers: 0,
@@ -201,7 +196,7 @@ export class BitCommP2PNetwork {
     }
 
     return {
-      peerId: this.node.peerId.toString(),
+      peerId: this.node ? this.node.peerId.toString() : 'demo-peer-' + Date.now().toString(36),
       connectedPeers: this.connectedPeers.size,
       isOnline: true,
       peers: Array.from(this.connectedPeers)
@@ -211,10 +206,10 @@ export class BitCommP2PNetwork {
   async shutdown(): Promise<void> {
     if (this.node) {
       await this.node.stop()
-      this.connectedPeers.clear()
-      this.isInitialized = false
-      console.log('P2P network shut down')
     }
+    this.connectedPeers.clear()
+    this.isInitialized = false
+    console.log('P2P network shut down')
   }
 
   private simulateIncomingMessage(): void {
@@ -240,10 +235,12 @@ export class BitCommP2PNetwork {
       timestamp: Date.now(),
       signature: 'demo-signature'
     }
+
+    // Notify all message handlers
     this.messageHandlers.forEach(handler => handler(envelope))
     console.log('Simulated incoming P2P message')
   }
 }
+
+// Singleton instance for the application
 export const bitcommP2P = new BitCommP2PNetwork()
-
-
