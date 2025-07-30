@@ -1,6 +1,7 @@
 import { ProofOfWorkDemo } from '@/components/ProofOfWorkDemo';
 import { IdentityManager } from '@/components/IdentityManager';
 import { MessageComposer } from '@/components/MessageComposer';
+import { P2PNetworkStatus } from '@/components/P2PNetworkStatus';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BitCommButton } from '@/components/ui/bitcomm-button';
 import { Bitcoin, Shield, Zap, Users } from 'lucide-react';
@@ -39,12 +40,24 @@ const Index = () => {
 
       {/* Main Content */}
       <section className="container mx-auto px-4 py-12">
-        <Tabs defaultValue="composer" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
+        <Tabs defaultValue="network" className="w-full">
+          <TabsList className="grid w-full grid-cols-4 mb-8">
+            <TabsTrigger value="network">P2P Network</TabsTrigger>
             <TabsTrigger value="composer">Message Composer</TabsTrigger>
             <TabsTrigger value="pow">Proof-of-Work Demo</TabsTrigger>
             <TabsTrigger value="identity">Identity Manager</TabsTrigger>
           </TabsList>
+          
+          <TabsContent value="network" className="space-y-6">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold mb-4">P2P Network Layer</h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Connect to the decentralized BitComm network. No central servers, 
+                just peer-to-peer communication with Bitcoin-level security.
+              </p>
+            </div>
+            <P2PNetworkStatus />
+          </TabsContent>
           
           <TabsContent value="composer" className="space-y-6">
             <div className="text-center mb-8">
