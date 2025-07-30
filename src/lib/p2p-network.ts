@@ -26,47 +26,47 @@ export class BitCommP2PNetwork {
 
   async initialize(): Promise<P2PNode> {
     try {
-      console.log('Initializing real LibP2P node...');
-      
-      this.node = await createLibp2p({
-        addresses: {
-          listen: [
-            '/ip4/0.0.0.0/tcp/0/ws'
-          ]
-        },
-        transports: [
-          webSockets(),
-          tcp()
-        ],
-        connectionEncryption: [noise()],
-        streamMuxers: [mplex()],
-        connectionManager: {
-          maxConnections: 100
-        }
-      })
-
-      await this.node.start()
-      console.log('LibP2P node started successfully')
-
-      this.setupEventListeners()
-
-      this.isInitialized = true
-      
-      const p2pNode: P2PNode = {
-        peerId: this.node.peerId.toString(),
-        isOnline: true,
-        connectedPeers: this.connectedPeers
-      }
-
-      console.log(`BitComm P2P node started. Peer ID: ${p2pNode.peerId}`)
-      return p2pNode
-
+      console.log('Initializing BitComm real P2P network...')
+      return await this.initializeRealP2P()
     } catch (error) {
-      console.error('Failed to initialize LibP2P node:', error)
-      
-      console.log('Falling back to demo mode...')
+      console.warn('Failed to initialize real P2P, falling back to demo mode:', error)
       return this.initializeDemoMode()
     }
+  }
+
+  private async initializeRealP2P(): Promise<P2PNode> {
+    this.node = await createLibp2p({
+      addresses: {
+        listen: [
+          '/ip4/0.0.0.0/tcp/0/ws',
+          '/ip4/127.0.0.1/tcp/0'
+        ]
+      },
+      transports: [
+        webSockets(),
+        tcp()
+      ],
+      connectionEncryption: [noise()],
+      streamMuxers: [mplex()],
+      services: {
+        // Add any additional services here if needed
+      }
+    })
+
+    await this.node.start()
+    this.setupEventListeners()
+    this.isInitialized = true
+
+    const p2pNode: P2PNode = {
+      peerId: this.node.peerId.toString(),
+      isOnline: true,
+      connectedPeers: this.connectedPeers
+    }
+
+    console.log(`Real P2P node started. Peer ID: ${p2pNode.peerId}`)
+    console.log('Listening addresses:', this.node.getMultiaddrs().map(addr => addr.toString()))
+    
+    return p2pNode
   }
 
   private async initializeDemoMode(): Promise<P2PNode> {
@@ -172,8 +172,25 @@ export class BitCommP2PNetwork {
     }
   }
 
+  async connectToPeer(peerMultiaddr: string): Promise<boolean> {
+    if (!this.node || !this.isInitialized) {
+      throw new Error('P2P node not initialized')
+    }
+
+    try {
+      const connection = await this.node.dial(peerMultiaddr)
+      const peerId = connection.remotePeer.toString()
+      this.connectedPeers.add(peerId)
+      console.log(`Successfully connected to peer: ${peerId}`)
+      return true
+    } catch (error) {
+      console.error(`Failed to connect to peer ${peerMultiaddr}:`, error)
+      return false
+    }
+  }
+
   async findPeersForAddress(bitcommAddress: string): Promise<string[]> {
-    // Return demo peers that can route to this address
+    // Return connected peers that can route to this address
     return Array.from(this.connectedPeers)
   }
 
