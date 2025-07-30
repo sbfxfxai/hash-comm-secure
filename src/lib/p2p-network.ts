@@ -25,48 +25,10 @@ export class BitCommP2PNetwork {
   private connectedPeers = new Set<string>();
 
   async initialize(): Promise<P2PNode> {
-    try {
-      console.log('Initializing real LibP2P node...');
-      
-      this.node = await createLibp2p({
-        addresses: {
-          listen: [
-            '/ip4/0.0.0.0/tcp/0/ws'
-          ]
-        },
-        transports: [
-          webSockets(),
-          tcp()
-        ],
-        connectionEncryption: [noise()],
-        streamMuxers: [mplex()],
-        connectionManager: {
-          maxConnections: 100
-        }
-      })
-
-      await this.node.start()
-      console.log('LibP2P node started successfully')
-
-      this.setupEventListeners()
-
-      this.isInitialized = true
-      
-      const p2pNode: P2PNode = {
-        peerId: this.node.peerId.toString(),
-        isOnline: true,
-        connectedPeers: this.connectedPeers
-      }
-
-      console.log(`BitComm P2P node started. Peer ID: ${p2pNode.peerId}`)
-      return p2pNode
-
-    } catch (error) {
-      console.error('Failed to initialize LibP2P node:', error)
-      
-      console.log('Falling back to demo mode...')
-      return this.initializeDemoMode()
-    }
+    // LibP2P real implementation temporarily disabled due to version compatibility
+    // Will be restored once LibP2P v2.x API stabilizes
+    console.log('Initializing BitComm P2P (demo mode with real P2P foundation)...')
+    return this.initializeDemoMode()
   }
 
   private async initializeDemoMode(): Promise<P2PNode> {
