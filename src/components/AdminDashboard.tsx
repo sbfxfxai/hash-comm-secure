@@ -45,7 +45,7 @@ export function AdminDashboard() {
               {identities.map(identity => (
                 <TableRow key={identity.id}>
                   <TableCell>{identity.name}</TableCell>
-                  <TableCell>{identity.metadata?.address || 'N/A'}</TableCell>
+                  <TableCell>{(identity.metadata as any)?.address || 'N/A'}</TableCell>
                   <TableCell>
                     <Badge variant={identity.is_verified ? "default" : "secondary"}>
                       {identity.verification_method || 'unverified'}

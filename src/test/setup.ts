@@ -72,7 +72,9 @@ const localStorageMock = (() => {
     clear: vi.fn(() => {
       store = {}
     }),
+    length: 0,
+    key: vi.fn(() => null),
   }
 })()
 
-global.localStorage = localStorageMock as Storage
+global.localStorage = localStorageMock as unknown as Storage
