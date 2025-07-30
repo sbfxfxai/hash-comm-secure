@@ -51,12 +51,20 @@ export function IdentityManager() {
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
-          setIdentities(parsed.map((id: any) => ({
-            ...id,
-            created: new Date(id.created)
-          })));
+          // Validate and safely map identities
+          const validatedIdentities = parsed
+            .filter((id: unknown): id is StoredIdentity => {
+              return typeof id === 'object' && id !== null &&
+                     'name' in id && 'address' in id && 'privateKey' in id && 'publicKey' in id;
+            })
+            .map((id: StoredIdentity) => ({
+              ...id,
+              created: id.created ? new Date(id.created) : new Date()
+            }));
+          setIdentities(validatedIdentities);
         } catch (error) {
-          console.error('Failed to load identities:', error);
+console.error('Error loading identities from localStorage:', error);
+          // Optionally, add Sentry or a third-party logging service here
         }
       }
 
@@ -141,10 +149,16 @@ export function IdentityManager() {
   };
 
   const togglePrivateKeyVisibility = (address: string) => {
-    setShowPrivateKeys(prev => ({
-      ...prev,
-      [address]: !prev[address]
-    }));
+    // Safely access object property to prevent injection
+    setShowPrivateKeys(prev => {
+      const newState = { ...prev };
+      if (Object.prototype.hasOwnProperty.call(newState, address)) {
+        newState[address] = !newState[address];
+      } else {
+        newState[address] = true;
+      }
+      return newState;
+    });
   };
 
   const copyToClipboard = (text: string, type: string) => {

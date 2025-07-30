@@ -2,15 +2,16 @@ import React, { createContext, useContext, useEffect, useState } from 'react'
 import { User, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
+import { AuthResponse } from '@/types/auth'
 
 interface AuthContextType {
   user: User | null
   session: Session | null
   loading: boolean
-  signIn: (email: string, password: string) => Promise<{ error: any }>
-  signUp: (email: string, password: string, fullName?: string) => Promise<{ error: any }>
+  signIn: (email: string, password: string) => Promise<AuthResponse>
+  signUp: (email: string, password: string, fullName?: string) => Promise<AuthResponse>
   signOut: () => Promise<void>
-  signInWithGoogle: () => Promise<{ error: any }>
+  signInWithGoogle: () => Promise<AuthResponse>
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType)

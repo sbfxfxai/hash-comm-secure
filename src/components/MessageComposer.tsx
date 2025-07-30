@@ -202,7 +202,8 @@ export function MessageComposer() {
       });
 
     } catch (error) {
-      console.error('Failed to send message:', error);
+console.error('Message send failed. Error details:', error);
+      // Consider logging to a remote server for further analysis
       toast({
         title: "Send Failed",
         description: "Could not send message. Please try again.",

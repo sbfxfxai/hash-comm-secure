@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { UsageEventData } from '@/types/database'
 
 export type SubscriptionTier = 'free' | 'premium' | 'business' | 'enterprise'
 export type SubscriptionStatus = 'active' | 'inactive' | 'cancelled' | 'past_due'
@@ -264,7 +265,7 @@ export class SubscriptionService {
   }
 
   // Track usage event
-  static async trackUsage(userId: string, eventType: string, eventData: any = {}): Promise<void> {
+  static async trackUsage(userId: string, eventType: string, eventData: UsageEventData = {}): Promise<void> {
     await supabase
       .from('usage_tracking')
       .insert({

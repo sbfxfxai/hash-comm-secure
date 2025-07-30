@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { IdentityMetadata, ComplianceReportData } from '@/types/database'
 
 const supabaseUrl = 'https://pwgpqhmypjtwmvlijbzb.supabase.co'
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3Z3BxaG15cGp0d212bGlqYnpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgyNTUzNDgsImV4cCI6MjA1MzgzMTM0OH0.XWNNxPSQ7RvVFvzGFQbBh0Q2wZLmPZvBvHYzWp9x8Qk'
@@ -20,7 +21,7 @@ export interface Database {
           verification_method: string | null
           created_at: string
           updated_at: string
-          metadata: any
+          metadata: IdentityMetadata
         }
         Insert: {
           id?: string
@@ -32,7 +33,7 @@ export interface Database {
           verification_method?: string | null
           created_at?: string
           updated_at?: string
-          metadata?: any
+          metadata?: IdentityMetadata
         }
         Update: {
           id?: string
@@ -44,7 +45,7 @@ export interface Database {
           verification_method?: string | null
           created_at?: string
           updated_at?: string
-          metadata?: any
+          metadata?: IdentityMetadata
         }
       }
       device_sync: {
@@ -84,7 +85,7 @@ export interface Database {
           generated_at: string
           date_range_start: string
           date_range_end: string
-          data: any
+          data: ComplianceReportData
           status: 'generating' | 'complete' | 'failed'
           created_at: string
         }
@@ -95,7 +96,7 @@ export interface Database {
           generated_at?: string
           date_range_start: string
           date_range_end: string
-          data: any
+          data: ComplianceReportData
           status?: 'generating' | 'complete' | 'failed'
           created_at?: string
         }
@@ -106,7 +107,7 @@ export interface Database {
           generated_at?: string
           date_range_start?: string
           date_range_end?: string
-          data?: any
+          data?: ComplianceReportData
           status?: 'generating' | 'complete' | 'failed'
           created_at?: string
         }
