@@ -3,6 +3,7 @@ import { render, RenderOptions } from '@testing-library/react'
 import { BrowserRouter } from 'react-router-dom'
 import { Toaster } from '@/components/ui/sonner'
 import { AuthProvider } from '@/contexts/AuthContext'
+import { vi } from 'vitest'
 
 // Mock the supabase module first
 vi.mock('@/lib/supabase', () => {

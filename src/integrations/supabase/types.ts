@@ -14,107 +14,77 @@ export type Database = {
   }
   public: {
     Tables: {
-      premium_identities: {
-        Row: {
-          id: string
-          user_id: string
-          name: string
-          public_key: string
-          encrypted_private_key: string
-          is_verified: boolean
-          verification_method: string | null
-          created_at: string
-          updated_at: string
-          metadata: Json
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          name: string
-          public_key: string
-          encrypted_private_key: string
-          is_verified?: boolean
-          verification_method?: string | null
-          created_at?: string
-          updated_at?: string
-          metadata?: Json
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          name?: string
-          public_key?: string
-          encrypted_private_key?: string
-          is_verified?: boolean
-          verification_method?: string | null
-          created_at?: string
-          updated_at?: string
-          metadata?: Json
-        }
-      }
-      device_sync: {
-        Row: {
-          id: string
-          identity_id: string
-          device_id: string
-          device_name: string
-          encrypted_data: string
-          last_sync: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          identity_id: string
-          device_id: string
-          device_name: string
-          encrypted_data: string
-          last_sync?: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          identity_id?: string
-          device_id?: string
-          device_name?: string
-          encrypted_data?: string
-          last_sync?: string
-          created_at?: string
-        }
-      }
       compliance_reports: {
         Row: {
-          id: string
-          report_type: 'audit' | 'activity' | 'security' | 'compliance'
+          data: Json | null
+          date_range_end: string | null
+          date_range_start: string | null
+          generated_at: string | null
           generated_by: string
-          generated_at: string
-          date_range_start: string
-          date_range_end: string
-          data: Json
-          status: 'generating' | 'complete' | 'failed'
-          created_at: string
+          id: string
+          report_type: string
+          status: string | null
         }
         Insert: {
-          id?: string
-          report_type: 'audit' | 'activity' | 'security' | 'compliance'
+          data?: Json | null
+          date_range_end?: string | null
+          date_range_start?: string | null
+          generated_at?: string | null
           generated_by: string
-          generated_at?: string
-          date_range_start: string
-          date_range_end: string
-          data: Json
-          status?: 'generating' | 'complete' | 'failed'
-          created_at?: string
+          id?: string
+          report_type: string
+          status?: string | null
         }
         Update: {
-          id?: string
-          report_type?: 'audit' | 'activity' | 'security' | 'compliance'
+          data?: Json | null
+          date_range_end?: string | null
+          date_range_start?: string | null
+          generated_at?: string | null
           generated_by?: string
-          generated_at?: string
-          date_range_start?: string
-          date_range_end?: string
-          data?: Json
-          status?: 'generating' | 'complete' | 'failed'
-          created_at?: string
+          id?: string
+          report_type?: string
+          status?: string | null
         }
+        Relationships: []
+      }
+      premium_identities: {
+        Row: {
+          created_at: string | null
+          encrypted_private_key: string
+          id: string
+          is_verified: boolean | null
+          metadata: Json | null
+          name: string
+          public_key: string
+          updated_at: string | null
+          user_id: string | null
+          verification_method: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          encrypted_private_key: string
+          id?: string
+          is_verified?: boolean | null
+          metadata?: Json | null
+          name: string
+          public_key: string
+          updated_at?: string | null
+          user_id?: string | null
+          verification_method?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          encrypted_private_key?: string
+          id?: string
+          is_verified?: boolean | null
+          metadata?: Json | null
+          name?: string
+          public_key?: string
+          updated_at?: string | null
+          user_id?: string | null
+          verification_method?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {
@@ -127,7 +97,11 @@ export type Database = {
       [_ in never]: never
     }
     CompositeTypes: {
-      [_ in never]: never
+      identity_metadata: {
+        address: string | null
+        domain: string | null
+        verification_docs: Json | null
+      }
     }
   }
 }
