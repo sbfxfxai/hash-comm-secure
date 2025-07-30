@@ -14,7 +14,78 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      compliance_reports: {
+        Row: {
+          data: Json | null
+          date_range_end: string | null
+          date_range_start: string | null
+          generated_at: string | null
+          generated_by: string
+          id: string
+          report_type: string
+          status: string | null
+        }
+        Insert: {
+          data?: Json | null
+          date_range_end?: string | null
+          date_range_start?: string | null
+          generated_at?: string | null
+          generated_by: string
+          id?: string
+          report_type: string
+          status?: string | null
+        }
+        Update: {
+          data?: Json | null
+          date_range_end?: string | null
+          date_range_start?: string | null
+          generated_at?: string | null
+          generated_by?: string
+          id?: string
+          report_type?: string
+          status?: string | null
+        }
+        Relationships: []
+      }
+      premium_identities: {
+        Row: {
+          created_at: string | null
+          encrypted_private_key: string
+          id: string
+          is_verified: boolean | null
+          metadata: Json | null
+          name: string
+          public_key: string
+          updated_at: string | null
+          user_id: string | null
+          verification_method: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          encrypted_private_key: string
+          id?: string
+          is_verified?: boolean | null
+          metadata?: Json | null
+          name: string
+          public_key: string
+          updated_at?: string | null
+          user_id?: string | null
+          verification_method?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          encrypted_private_key?: string
+          id?: string
+          is_verified?: boolean | null
+          metadata?: Json | null
+          name?: string
+          public_key?: string
+          updated_at?: string | null
+          user_id?: string | null
+          verification_method?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -26,7 +97,11 @@ export type Database = {
       [_ in never]: never
     }
     CompositeTypes: {
-      [_ in never]: never
+      identity_metadata: {
+        address: string | null
+        domain: string | null
+        verification_docs: Json | null
+      }
     }
   }
 }
