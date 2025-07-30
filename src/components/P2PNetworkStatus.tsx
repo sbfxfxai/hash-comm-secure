@@ -36,7 +36,9 @@ export const P2PNetworkStatus = () => {
   const initializeP2P = async () => {
     setIsInitializing(true);
     try {
-      await bitcommP2P.initialize();
+      // Generate a demo BitComm address for testing
+      const demoAddress = 'bc1test' + Math.random().toString(36).substring(2, 8);
+      await bitcommP2P.initialize(demoAddress);
       bitcommP2P.addMessageHandler(handleReceivedMessage);
       updateNetworkStats();
       

@@ -68,6 +68,118 @@ export class WebRTCP2PNetwork {
     }
   }
 
+  private async connectToSignalingServer(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      try {
+        this.signalingWs = new WebSocket(this.signalingServerUrl);
+
+        this.signalingWs.onopen = () => {
+          console.log('🔗 Connected to signaling server');
+          // Register with BitComm address
+          this.signalingWs?.send(JSON.stringify({
+            type: 'register',
+            bitcommAddress: this.bitcommAddress
+          }));
+        };
+
+        this.signalingWs.onmessage = (event) => {
+          this.handleSignalingMessage(JSON.parse(event.data));
+        };
+
+        this.signalingWs.onerror = (error) => {
+          console.error('Signaling server error:', error);
+          reject(error);
+        };
+
+        this.signalingWs.onclose = () => {
+          console.log('Signaling server disconnected');
+          if (this.reconnectAttempts < this.maxReconnectAttempts) {
+            setTimeout(() => this.attemptReconnect(), this.reconnectDelay);
+          }
+        };
+
+        // Set peer ID on welcome message
+        const welcomeHandler = (event: MessageEvent) => {
+          const data = JSON.parse(event.data);
+          if (data.type === 'welcome') {
+            this.localPeerId = data.peerId;
+            resolve();
+          }
+        };
+
+        this.signalingWs.addEventListener('message', welcomeHandler, { once: true });
+
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  private initializeDemoMode(): P2PNode {
+    this.localPeerId = 'demo-peer-' + Math.random().toString(36).substring(2, 8);
+    console.log('🎭 Demo mode initialized');
+    
+    // Set up demo WebRTC signaling
+    this.setupWebRTCSignaling();
+    
+    return {
+      peerId: this.localPeerId,
+      isOnline: true,
+      connectedPeers: new Set()
+    };
+  }
+
+  private handleSignalingMessage(message: SignalingMessage): void {
+    switch (message.type) {
+      case 'welcome':
+        this.localPeerId = message.peerId;
+        console.log('🎉 Received peer ID:', this.localPeerId);
+        break;
+      
+      case 'registered':
+        console.log('✅ Registered with BitComm address:', message.bitcommAddress);
+        break;
+      
+      case 'peers-found':
+        console.log('👥 Found peers:', message.peers);
+        this.initiateConnections(message.peers);
+        break;
+      
+      case 'offer':
+      case 'answer':
+      case 'ice-candidate':
+        this.handleWebRTCSignaling(message);
+        break;
+      
+      default:
+        console.log('Unknown signaling message:', message.type);
+    }
+  }
+
+  private async initiateConnections(peers: any[]): Promise<void> {
+    for (const peer of peers) {
+      await this.createPeerConnection(peer.peerId);
+    }
+  }
+
+  private async createPeerConnection(remotePeerId: string): Promise<void> {
+    // WebRTC connection creation logic
+    console.log('Creating connection to:', remotePeerId);
+  }
+
+  private handleWebRTCSignaling(message: SignalingMessage): void {
+    // Handle WebRTC signaling messages
+    console.log('Handling WebRTC signaling:', message.type);
+  }
+
+  private attemptReconnect(): void {
+    this.reconnectAttempts++;
+    console.log(`Attempting reconnect ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
+    this.connectToSignalingServer().catch(() => {
+      this.reconnectDelay *= 2; // Exponential backoff
+    });
+  }
+
   private async setupWebRTCSignaling(): Promise<void> {
     // In a real implementation, this would connect to signaling servers
     // For now, we'll simulate the capability
