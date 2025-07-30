@@ -338,23 +338,49 @@ export function MessageComposer() {
             )}
 
             {/* Send Button - Full Width on Mobile */}
-            <BitCommButton
-              onClick={sendMessage}
-              disabled={!message.trim() || !recipient.trim() || isSending || !activeIdentity}
-              className="w-full bg-gradient-primary py-3"
-            >
-              {isSending ? (
-                <>
-                  <Cpu className="h-4 w-4 mr-2 animate-spin" />
-                  {isComputing ? 'Computing...' : 'Sending...'}
-                </>
-              ) : (
-                <>
+            {!activeIdentity ? (
+              <div className="space-y-3">
+                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg dark:bg-yellow-900/20 dark:border-yellow-800">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                        Identity Required
+                      </p>
+                      <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
+                        You need to create and activate an identity before sending messages. 
+                        Go to the <strong>Identity Manager</strong> tab to get started.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <BitCommButton
+                  disabled={true}
+                  className="w-full bg-gradient-primary py-3 opacity-50"
+                >
                   <Send className="h-4 w-4 mr-2" />
                   Send Encrypted Message
-                </>
-              )}
-            </BitCommButton>
+                </BitCommButton>
+              </div>
+            ) : (
+              <BitCommButton
+                onClick={sendMessage}
+                disabled={!message.trim() || !recipient.trim() || isSending}
+                className="w-full bg-gradient-primary py-3"
+              >
+                {isSending ? (
+                  <>
+                    <Cpu className="h-4 w-4 mr-2 animate-spin" />
+                    {isComputing ? 'Computing...' : 'Sending...'}
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4 mr-2" />
+                    Send Encrypted Message
+                  </>
+                )}
+              </BitCommButton>
+            )}
           </CardContent>
         </Card>
       </div>
