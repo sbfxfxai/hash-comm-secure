@@ -1,4 +1,4 @@
-// Real WebRTC P2P implementation for BitComm
+// Real WebRTC P2P implementation for BitComm with production signaling
 import { BitCommMessage, verifyProofOfWork } from './bitcomm';
 
 export interface P2PNode {
@@ -14,23 +14,40 @@ export interface MessageEnvelope {
   signature: string;
 }
 
+interface SignalingMessage {
+  type: string;
+  [key: string]: any;
+}
+
 export class WebRTCP2PNetwork {
   private connections = new Map<string, RTCPeerConnection>();
   private dataChannels = new Map<string, RTCDataChannel>();
   private messageHandlers: Set<(envelope: MessageEnvelope) => void> = new Set();
   private isInitialized = false;
   private localPeerId: string = '';
+  private signalingWs: WebSocket | null = null;
+  private bitcommAddress: string = '';
+  private signalingServerUrl: string;
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 5;
+  private reconnectDelay = 1000;
 
-  async initialize(): Promise<P2PNode> {
+  constructor() {
+    // Set signaling server URL based on environment
+    this.signalingServerUrl = process.env.NODE_ENV === 'production' 
+      ? 'wss://bitcomm-signaling.herokuapp.com' // Production signaling server
+      : 'ws://localhost:8080'; // Local development
+  }
+
+  async initialize(bitcommAddress: string): Promise<P2PNode> {
     try {
       console.log('🚀 Initializing real WebRTC P2P network...');
       
-      this.localPeerId = 'peer-' + Math.random().toString(36).substring(2, 15);
+      this.bitcommAddress = bitcommAddress;
       this.isInitialized = true;
 
-      // In a real implementation, you would connect to signaling servers here
-      console.log('✅ Real WebRTC P2P node started!');
-      console.log('🌐 Ready to accept peer connections via WebRTC');
+      // Connect to real signaling server
+      await this.connectToSignalingServer();
       
       const p2pNode: P2PNode = {
         peerId: this.localPeerId,
@@ -38,14 +55,16 @@ export class WebRTCP2PNetwork {
         connectedPeers: new Set(this.connections.keys())
       };
 
-      // Start listening for connections
-      this.setupWebRTCSignaling();
+      console.log('✅ Real WebRTC P2P node started!');
+      console.log('🌐 Connected to signaling server and ready for peer connections');
 
       return p2pNode;
 
     } catch (error) {
       console.error('Failed to initialize WebRTC P2P:', error);
-      throw error;
+      // Fallback to demo mode if signaling server is unavailable
+      console.log('⚠️ Falling back to demo mode...');
+      return this.initializeDemoMode();
     }
   }
 
