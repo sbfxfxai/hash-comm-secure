@@ -14,7 +14,108 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      premium_identities: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          public_key: string
+          encrypted_private_key: string
+          is_verified: boolean
+          verification_method: string | null
+          created_at: string
+          updated_at: string
+          metadata: Json
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          public_key: string
+          encrypted_private_key: string
+          is_verified?: boolean
+          verification_method?: string | null
+          created_at?: string
+          updated_at?: string
+          metadata?: Json
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          public_key?: string
+          encrypted_private_key?: string
+          is_verified?: boolean
+          verification_method?: string | null
+          created_at?: string
+          updated_at?: string
+          metadata?: Json
+        }
+      }
+      device_sync: {
+        Row: {
+          id: string
+          identity_id: string
+          device_id: string
+          device_name: string
+          encrypted_data: string
+          last_sync: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          identity_id: string
+          device_id: string
+          device_name: string
+          encrypted_data: string
+          last_sync?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          identity_id?: string
+          device_id?: string
+          device_name?: string
+          encrypted_data?: string
+          last_sync?: string
+          created_at?: string
+        }
+      }
+      compliance_reports: {
+        Row: {
+          id: string
+          report_type: 'audit' | 'activity' | 'security' | 'compliance'
+          generated_by: string
+          generated_at: string
+          date_range_start: string
+          date_range_end: string
+          data: Json
+          status: 'generating' | 'complete' | 'failed'
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          report_type: 'audit' | 'activity' | 'security' | 'compliance'
+          generated_by: string
+          generated_at?: string
+          date_range_start: string
+          date_range_end: string
+          data: Json
+          status?: 'generating' | 'complete' | 'failed'
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          report_type?: 'audit' | 'activity' | 'security' | 'compliance'
+          generated_by?: string
+          generated_at?: string
+          date_range_start?: string
+          date_range_end?: string
+          data?: Json
+          status?: 'generating' | 'complete' | 'failed'
+          created_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
