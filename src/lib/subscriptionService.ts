@@ -246,15 +246,17 @@ export class SubscriptionService {
       .gte('timestamp', startOfMonth.toISOString())
 
     // Get device count
+    const { data: identities } = await supabase
+      .from('premium_identities')
+      .select('id')
+      .eq('user_id', userId)
+
+    const identityIds = identities?.map(i => i.id) || []
+    
     const { count: deviceCount } = await supabase
       .from('device_sync')
       .select('device_id', { count: 'exact' })
-      .in('identity_id', 
-        supabase
-          .from('premium_identities')
-          .select('id')
-          .eq('user_id', userId)
-      )
+      .in('identity_id', identityIds)
 
     return {
       identityCount: identityCount || 0,
