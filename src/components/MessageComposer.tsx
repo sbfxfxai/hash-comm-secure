@@ -48,516 +48,511 @@ interface Contact {
 }
 
 export function MessageComposer() {
-  const [identities, setIdentities] = useState<StoredIdentity[]>([]);
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [messages, setMessages] = useState<BitCommMessage[]>([]);
-  const [activeIdentity, setActiveIdentity] = useState<StoredIdentity | null>(null);
+  const { toast } = useToast();
   
-  // Compose form state
-  const [recipientAddress, setRecipientAddress] = useState('');
-  const [messageContent, setMessageContent] = useState('');
-  const [powDifficulty, setPowDifficulty] = useState(4);
-  
-  // Sending state
+  // State management
+  const [message, setMessage] = useState('');
+  const [recipient, setRecipient] = useState('');
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [isSending, setIsSending] = useState(false);
-  const [sendingProgress, setSendingProgress] = useState(0);
-  const [currentNonce, setCurrentNonce] = useState(0);
+  const [powProgress, setPowProgress] = useState(0);
+  const [powStats, setPowStats] = useState<PoWResult | null>(null);
+  const [powDifficulty, setPowDifficulty] = useState(4);
+  const [isComputing, setIsComputing] = useState(false);
+  
+  // Storage state
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [sentMessages, setSentMessages] = useState<BitCommMessage[]>([]);
+  const [identities, setIdentities] = useState<StoredIdentity[]>([]);
+  const [activeIdentity, setActiveIdentity] = useState<StoredIdentity | null>(null);
   
   // Contact management
   const [newContactName, setNewContactName] = useState('');
   const [newContactAddress, setNewContactAddress] = useState('');
-  const [isAddingContact, setIsAddingContact] = useState(false);
-  
-  const { toast } = useToast();
+  const [newContactPubKey, setNewContactPubKey] = useState('');
+  const [showAddContact, setShowAddContact] = useState(false);
 
-  // Load data from localStorage
+  // Load data from localStorage on component mount
   useEffect(() => {
-    loadIdentities();
-    loadContacts();
-    loadMessages();
+    const storedContacts = localStorage.getItem('bitcomm-contacts');
+    if (storedContacts) {
+      setContacts(JSON.parse(storedContacts));
+    }
+
+    const storedMessages = localStorage.getItem('bitcomm-sent-messages');
+    if (storedMessages) {
+      setSentMessages(JSON.parse(storedMessages));
+    }
+
+    const storedIdentities = localStorage.getItem('bitcomm-identities');
+    if (storedIdentities) {
+      const parsed = JSON.parse(storedIdentities);
+      setIdentities(parsed);
+      const active = parsed.find((id: StoredIdentity) => id.isActive);
+      if (active) setActiveIdentity(active);
+    }
   }, []);
 
-  const loadIdentities = () => {
-    const stored = localStorage.getItem('bitcomm-identities');
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        const identitiesWithDates = parsed.map((id: any) => ({
-          ...id,
-          created: new Date(id.created)
-        }));
-        setIdentities(identitiesWithDates);
-        
-        const active = identitiesWithDates.find((id: StoredIdentity) => id.isActive);
-        setActiveIdentity(active || null);
-      } catch (error) {
-        console.error('Failed to load identities:', error);
-      }
-    }
-  };
-
-  const loadContacts = () => {
-    const stored = localStorage.getItem('bitcomm-contacts');
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        setContacts(parsed.map((contact: any) => ({
-          ...contact,
-          lastSeen: new Date(contact.lastSeen)
-        })));
-      } catch (error) {
-        console.error('Failed to load contacts:', error);
-      }
-    }
-  };
-
-  const loadMessages = () => {
-    const stored = localStorage.getItem('bitcomm-messages');
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        setMessages(parsed.map((msg: any) => ({
-          ...msg,
-          timestamp: new Date(msg.timestamp)
-        })));
-      } catch (error) {
-        console.error('Failed to load messages:', error);
-      }
-    }
-  };
-
-  const saveContacts = (newContacts: Contact[]) => {
-    localStorage.setItem('bitcomm-contacts', JSON.stringify(newContacts));
-    setContacts(newContacts);
-  };
-
-  const saveMessages = (newMessages: BitCommMessage[]) => {
-    localStorage.setItem('bitcomm-messages', JSON.stringify(newMessages));
-    setMessages(newMessages);
-  };
-
   const addContact = () => {
-    if (!newContactName.trim() || !newContactAddress.trim()) {
+    if (!newContactName || !newContactAddress || !newContactPubKey) {
       toast({
-        title: "Invalid Contact",
-        description: "Please enter both name and address.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Check if contact already exists
-    if (contacts.some(c => c.address === newContactAddress)) {
-      toast({
-        title: "Contact Exists",
-        description: "This address is already in your contacts.",
+        title: "Missing Information",
+        description: "Please fill in all contact fields",
         variant: "destructive",
       });
       return;
     }
 
     const newContact: Contact = {
-      address: newContactAddress.trim(),
-      name: newContactName.trim(),
-      publicKey: '', // In real implementation, this would be fetched from blockchain
+      address: newContactAddress,
+      name: newContactName,
+      publicKey: newContactPubKey,
       powDifficulty: 4,
       lastSeen: new Date()
     };
 
     const updatedContacts = [...contacts, newContact];
-    saveContacts(updatedContacts);
+    setContacts(updatedContacts);
+    localStorage.setItem('bitcomm-contacts', JSON.stringify(updatedContacts));
     
     setNewContactName('');
     setNewContactAddress('');
-    setIsAddingContact(false);
-    
+    setNewContactPubKey('');
+    setShowAddContact(false);
+
     toast({
       title: "Contact Added",
-      description: `${newContact.name} has been added to your contacts.`,
+      description: `${newContactName} has been added to your contacts`,
     });
   };
 
+  const selectContact = (contact: Contact) => {
+    setSelectedContact(contact);
+    setRecipient(contact.address);
+    setPowDifficulty(contact.powDifficulty);
+  };
+
   const sendMessage = async () => {
-    if (!activeIdentity) {
+    if (!message.trim() || !recipient.trim()) {
       toast({
-        title: "No Identity",
-        description: "Please create an identity first.",
+        title: "Incomplete Message",
+        description: "Please enter both message and recipient",
         variant: "destructive",
       });
       return;
     }
 
-    if (!recipientAddress.trim() || !messageContent.trim()) {
+    if (!activeIdentity) {
       toast({
-        title: "Incomplete Message",
-        description: "Please enter recipient address and message content.",
+        title: "No Identity Selected",
+        description: "Please select an active identity first",
         variant: "destructive",
       });
       return;
     }
 
     setIsSending(true);
-    setSendingProgress(0);
-    
+    setIsComputing(true);
+
     try {
-      // Step 1: Encrypt the message
-      const recipientPublicKey = recipientAddress; // Simplified - in real app, fetch from blockchain
-      const encryptedContent = encryptMessage(messageContent, recipientPublicKey);
-      
-      // Step 2: Compute proof-of-work
-      const powResult = await computeProofOfWork(
-        messageContent,
+      // Compute proof-of-work
+      const pow = await computeProofOfWork(
+        message,
         powDifficulty,
         (nonce, hash) => {
-          setCurrentNonce(nonce);
-          setSendingProgress((nonce % 10000) / 100);
+          const progress = Math.min((nonce / (Math.pow(16, powDifficulty) / 10)) * 100, 95);
+          setPowProgress(progress);
         }
       );
 
-      // Step 3: Create message object
+      setPowStats(pow);
+      setPowProgress(100);
+      setIsComputing(false);
+
+      // Encrypt message
+      const encryptedContent = encryptMessage(message, selectedContact?.publicKey || recipient);
+
+      // Create message object
       const newMessage: BitCommMessage = {
-        id: Date.now().toString(),
+        id: 'msg-' + Date.now(),
         from: activeIdentity.address,
-        to: recipientAddress,
-        content: messageContent,
+        to: recipient,
+        content: message,
         encrypted: encryptedContent,
         timestamp: new Date(),
-        pow: powResult,
-        delivered: true // Simulated P2P delivery
+        pow,
+        delivered: false
       };
 
-      // Step 4: Save message
-      const updatedMessages = [...messages, newMessage];
-      saveMessages(updatedMessages);
+      // Store sent message
+      const updatedMessages = [newMessage, ...sentMessages];
+      setSentMessages(updatedMessages);
+      localStorage.setItem('bitcomm-sent-messages', JSON.stringify(updatedMessages));
 
-      // Step 5: Reset form
-      setRecipientAddress('');
-      setMessageContent('');
-      setSendingProgress(0);
-      
+      // Reset form
+      setMessage('');
+      setRecipient('');
+      setSelectedContact(null);
+      setPowProgress(0);
+      setPowStats(null);
+
       toast({
         title: "Message Sent!",
-        description: `Message delivered with ${powResult.difficulty}-difficulty PoW in ${powResult.computeTime.toFixed(2)}s`,
+        description: `Encrypted message delivered with PoW (${pow.computeTime.toFixed(2)}s)`,
       });
 
     } catch (error) {
+      console.error('Failed to send message:', error);
       toast({
         title: "Send Failed",
-        description: "Failed to send message. Please try again.",
+        description: "Could not send message. Please try again.",
         variant: "destructive",
       });
     } finally {
       setIsSending(false);
+      setIsComputing(false);
     }
   };
 
-  const getContactName = (address: string) => {
-    const contact = contacts.find(c => c.address === address);
-    return contact ? contact.name : `${address.substring(0, 8)}...${address.substring(-6)}`;
-  };
-
-  if (!activeIdentity) {
-    return (
-      <Card className="border-yellow-200 bg-yellow-50/50">
-        <CardContent className="pt-6">
-          <div className="text-center space-y-4">
-            <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto">
-              <User className="h-8 w-8 text-yellow-600" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-yellow-900">No Active Identity</h3>
-              <p className="text-sm text-yellow-700 mt-1">
-                Please create and activate an identity in the Identity Manager tab before sending messages.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <div className="space-y-6">
-      {/* Active Identity Display */}
-      <Card className="border-bitcoin-orange/20 bg-bitcoin-orange/5">
-        <CardContent className="pt-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-bitcoin-orange rounded-full flex items-center justify-center">
-              <Shield className="h-5 w-5 text-white" />
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 p-2 lg:p-4">
+      {/* Mobile-First Message Composer */}
+      <div className="lg:col-span-2 order-1 lg:order-1">
+        <Card className="h-fit">
+          <CardHeader className="pb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <Mail className="h-5 w-5" />
+                  Compose Message
+                </CardTitle>
+                <CardDescription>
+                  Send encrypted, PoW-protected messages via BitComm
+                </CardDescription>
+              </div>
+              {activeIdentity && (
+                <Badge variant="outline" className="flex items-center gap-2 w-fit">
+                  <User className="h-3 w-3" />
+                  <span className="font-mono text-xs">{activeIdentity.address.substring(0, 8)}...</span>
+                </Badge>
+              )}
             </div>
-            <div>
-              <h4 className="font-semibold">{activeIdentity.name}</h4>
-              <p className="text-sm text-muted-foreground font-mono">
-                {activeIdentity.address.substring(0, 20)}...
-              </p>
-            </div>
-            <Badge className="bg-bitcoin-orange text-white ml-auto">Active</Badge>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Message Composer */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Send className="h-5 w-5 text-bitcoin-orange" />
-            Compose Message
-          </CardTitle>
-          <CardDescription>
-            Send encrypted, PoW-protected messages via BitComm network
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="recipient">Recipient Address</Label>
-            <div className="flex gap-2">
-              <Input
-                id="recipient"
-                value={recipientAddress}
-                onChange={(e) => setRecipientAddress(e.target.value)}
-                placeholder="Enter BitComm address..."
-                className="flex-1"
-              />
-              <BitCommButton
-                onClick={() => setIsAddingContact(!isAddingContact)}
-                variant="outline"
-                size="sm"
-              >
-                Add Contact
-              </BitCommButton>
-            </div>
-            
-            {/* Quick contact selection */}
-            {contacts.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {contacts.slice(0, 3).map((contact) => (
-                  <Badge
-                    key={contact.address}
-                    variant="outline"
-                    className="cursor-pointer hover:bg-accent"
-                    onClick={() => setRecipientAddress(contact.address)}
-                  >
-                    {contact.name}
+          </CardHeader>
+          
+          <CardContent className="space-y-6">
+            {/* Recipient Section - Mobile Optimized */}
+            <div className="space-y-3">
+              <Label htmlFor="recipient" className="text-sm font-medium">Recipient Address</Label>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Input
+                  id="recipient"
+                  placeholder="Enter BitComm address or select contact..."
+                  value={recipient}
+                  onChange={(e) => setRecipient(e.target.value)}
+                  className="flex-1 font-mono text-sm"
+                />
+                <BitCommButton
+                  variant="outline"
+                  onClick={() => setShowAddContact(true)}
+                  className="w-full sm:w-auto whitespace-nowrap"
+                >
+                  Add Contact
+                </BitCommButton>
+              </div>
+              
+              {selectedContact && (
+                <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium">{selectedContact.name}</span>
+                  <Badge variant="secondary" className="ml-auto">
+                    PoW: {selectedContact.powDifficulty}
                   </Badge>
+                </div>
+              )}
+            </div>
+
+            {/* Message Content - Mobile Optimized */}
+            <div className="space-y-3">
+              <Label htmlFor="message" className="text-sm font-medium">Message</Label>
+              <Textarea
+                id="message"
+                placeholder="Type your message here... (will be encrypted)"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                className="min-h-[120px] resize-none"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>{message.length} characters</span>
+                <span className="flex items-center gap-1">
+                  <Lock className="h-3 w-3" />
+                  End-to-end encrypted
+                </span>
+              </div>
+            </div>
+
+            {/* PoW Settings - Compact Mobile Layout */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium">Proof-of-Work Difficulty</Label>
+                <Badge variant="outline" className="font-mono">
+                  {powDifficulty} zeros
+                </Badge>
+              </div>
+              
+              <div className="grid grid-cols-4 gap-2">
+                {[3, 4, 5, 6].map((level) => (
+                  <BitCommButton
+                    key={level}
+                    variant={powDifficulty === level ? "default" : "outline"}
+                    onClick={() => setPowDifficulty(level)}
+                    className="text-xs py-2"
+                    disabled={isSending}
+                  >
+                    {level}
+                  </BitCommButton>
                 ))}
               </div>
+              
+              <p className="text-xs text-muted-foreground">
+                Higher difficulty = stronger anti-spam protection (~{Math.pow(2, powDifficulty * 4 - 16) * 15}s compute time)
+              </p>
+            </div>
+
+            {/* Send Progress - Mobile Optimized */}
+            {isSending && (
+              <div className="space-y-3 p-4 bg-muted/30 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Cpu className="h-4 w-4 animate-pulse" />
+                  <span className="text-sm font-medium">
+                    {isComputing ? 'Computing Proof-of-Work...' : 'Finalizing...'}
+                  </span>
+                </div>
+                <Progress value={powProgress} className="h-2" />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>{powProgress.toFixed(1)}% complete</span>
+                  {powStats && (
+                    <span>{powStats.computeTime.toFixed(2)}s elapsed</span>
+                  )}
+                </div>
+              </div>
             )}
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="message">Message Content</Label>
-            <Textarea
-              id="message"
-              value={messageContent}
-              onChange={(e) => setMessageContent(e.target.value)}
-              placeholder="Type your message..."
-              className="min-h-[120px]"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Proof-of-Work Difficulty: {powDifficulty}</Label>
-            <div className="flex items-center gap-4">
-              <input
-                type="range"
-                min={3}
-                max={6}
-                value={powDifficulty}
-                onChange={(e) => setPowDifficulty(Number(e.target.value))}
-                className="flex-1"
-              />
-              <Badge variant="outline">
-                ~{Math.pow(16, powDifficulty).toLocaleString()} hashes
-              </Badge>
-            </div>
-            <div className="flex justify-between text-sm text-muted-foreground">
-              <span>Fast (3)</span>
-              <span>Balanced (4-5)</span>
-              <span>Secure (6)</span>
-            </div>
-          </div>
-
-          <BitCommButton
-            onClick={sendMessage}
-            disabled={isSending || !recipientAddress.trim() || !messageContent.trim()}
-            variant={isSending ? "mining" : "hero"}
-            size="lg"
-            className="w-full"
-          >
-            {isSending ? (
-              <>
-                <Cpu className="mr-2 h-4 w-4 animate-spin" />
-                Computing PoW... {currentNonce.toLocaleString()}
-              </>
-            ) : (
-              <>
-                <Send className="mr-2 h-4 w-4" />
-                Send Message
-              </>
-            )}
-          </BitCommButton>
-
-          {isSending && (
-            <div className="space-y-2">
-              <Progress value={sendingProgress} className="w-full" />
-              <div className="text-sm text-center text-muted-foreground">
-                <Lock className="inline h-3 w-3 mr-1" />
-                Encrypting & computing proof-of-work...
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Add Contact Form */}
-      {isAddingContact && (
-        <Card className="border-blue-200 bg-blue-50/50">
-          <CardHeader>
-            <CardTitle className="text-blue-900">Add New Contact</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="contact-name">Contact Name</Label>
-                <Input
-                  id="contact-name"
-                  value={newContactName}
-                  onChange={(e) => setNewContactName(e.target.value)}
-                  placeholder="e.g., Alice, Bob..."
-                />
-              </div>
-              <div>
-                <Label htmlFor="contact-address">BitComm Address</Label>
-                <Input
-                  id="contact-address"
-                  value={newContactAddress}
-                  onChange={(e) => setNewContactAddress(e.target.value)}
-                  placeholder="40-character address..."
-                />
-              </div>
-            </div>
-            <div className="flex gap-2 justify-end">
-              <BitCommButton
-                onClick={() => setIsAddingContact(false)}
-                variant="outline"
-              >
-                Cancel
-              </BitCommButton>
-              <BitCommButton onClick={addContact} variant="hero">
-                Add Contact
-              </BitCommButton>
-            </div>
+            {/* Send Button - Full Width on Mobile */}
+            <BitCommButton
+              onClick={sendMessage}
+              disabled={!message.trim() || !recipient.trim() || isSending || !activeIdentity}
+              className="w-full bg-gradient-primary py-3"
+            >
+              {isSending ? (
+                <>
+                  <Cpu className="h-4 w-4 mr-2 animate-spin" />
+                  {isComputing ? 'Computing...' : 'Sending...'}
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4 mr-2" />
+                  Send Encrypted Message
+                </>
+              )}
+            </BitCommButton>
           </CardContent>
         </Card>
-      )}
+      </div>
 
-      {/* Message History */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Mail className="h-5 w-5 text-bitcoin-orange" />
-            Message History ({messages.length})
-          </CardTitle>
-          <CardDescription>
-            Your sent and received BitComm messages
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {messages.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Mail className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No messages yet. Send your first BitComm message!</p>
-            </div>
-          ) : (
-            <ScrollArea className="h-[400px]">
-              <div className="space-y-4">
-                {messages
-                  .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-                  .map((message) => (
-                    <div
-                      key={message.id}
-                      className={`p-4 rounded-lg border ${
-                        message.from === activeIdentity.address
-                          ? 'bg-bitcoin-orange/5 border-bitcoin-orange/20 ml-8'
-                          : 'bg-gray-50 border-gray-200 mr-8'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <div className="font-medium">
-                            {message.from === activeIdentity.address ? 'You' : getContactName(message.from)}
-                            {message.from !== activeIdentity.address && (
-                              <span className="text-xs text-muted-foreground ml-2">
-                                → {getContactName(message.to)}
-                              </span>
-                            )}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {message.timestamp.toLocaleString()}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs">
-                            <Hash className="h-3 w-3 mr-1" />
-                            PoW {message.pow.difficulty}
-                          </Badge>
-                          {message.delivered && (
-                            <CheckCircle className="h-4 w-4 text-green-500" />
-                          )}
-                        </div>
-                      </div>
-                      
-                      <p className="text-sm mb-2">{message.content}</p>
-                      
-                      <div className="text-xs text-muted-foreground space-y-1">
-                        <div className="flex items-center gap-4">
-                          <span>Nonce: {message.pow.nonce.toLocaleString()}</span>
-                          <span>Time: {message.pow.computeTime.toFixed(2)}s</span>
-                          <span className="font-mono">
-                            Hash: {message.pow.hash.substring(0, 16)}...
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+      {/* Mobile-Optimized Sidebar */}
+      <div className="order-2 lg:order-2 space-y-4 lg:space-y-6">
+        {/* Quick Add Contact Modal */}
+        {showAddContact && (
+          <Card className="border-primary">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg">Add New Contact</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="contact-name" className="text-sm">Name</Label>
+                  <Input
+                    id="contact-name"
+                    placeholder="Contact name"
+                    value={newContactName}
+                    onChange={(e) => setNewContactName(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="contact-address" className="text-sm">BitComm Address</Label>
+                  <Input
+                    id="contact-address"
+                    placeholder="Address (40 characters)"
+                    value={newContactAddress}
+                    onChange={(e) => setNewContactAddress(e.target.value)}
+                    className="mt-1 font-mono text-sm"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="contact-pubkey" className="text-sm">Public Key</Label>
+                  <Input
+                    id="contact-pubkey"
+                    placeholder="Public key for encryption"
+                    value={newContactPubKey}
+                    onChange={(e) => setNewContactPubKey(e.target.value)}
+                    className="mt-1 font-mono text-sm"
+                  />
+                </div>
               </div>
-            </ScrollArea>
-          )}
-        </CardContent>
-      </Card>
+              
+              <div className="flex gap-2 pt-2">
+                <BitCommButton onClick={addContact} className="flex-1">
+                  Add Contact
+                </BitCommButton>
+                <BitCommButton 
+                  variant="outline" 
+                  onClick={() => setShowAddContact(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </BitCommButton>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-      {/* Contacts List */}
-      {contacts.length > 0 && (
+        {/* Contacts List - Mobile Optimized */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5 text-bitcoin-orange" />
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <User className="h-4 w-4" />
               Contacts ({contacts.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {contacts.map((contact) => (
-                <div
-                  key={contact.address}
-                  className="p-3 border rounded-lg hover:bg-accent cursor-pointer"
-                  onClick={() => setRecipientAddress(contact.address)}
-                >
-                  <div className="font-medium">{contact.name}</div>
-                  <div className="text-xs text-muted-foreground font-mono">
-                    {contact.address.substring(0, 20)}...
-                  </div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge variant="outline" className="text-xs">
-                      PoW {contact.powDifficulty}
-                    </Badge>
-                  </div>
+            {contacts.length === 0 ? (
+              <div className="text-center py-6 lg:py-8 text-muted-foreground">
+                <User className="h-6 w-6 lg:h-8 lg:w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">No contacts yet</p>
+                <p className="text-xs">Add contacts to send messages</p>
+              </div>
+            ) : (
+              <ScrollArea className="h-[180px] lg:h-[200px]">
+                <div className="space-y-2">
+                  {contacts.map((contact, index) => (
+                    <div
+                      key={index}
+                      className={`p-3 rounded-lg cursor-pointer border transition-colors ${
+                        selectedContact?.address === contact.address
+                          ? 'bg-primary/10 border-primary'
+                          : 'bg-muted/30 border-muted hover:bg-muted/50'
+                      }`}
+                      onClick={() => selectContact(contact)}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-medium text-sm">{contact.name}</span>
+                        <Badge variant="secondary" className="text-xs">
+                          PoW {contact.powDifficulty}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground font-mono">
+                        {contact.address.substring(0, 12)}...{contact.address.substring(-8)}
+                      </p>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </ScrollArea>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Recent Messages - Mobile Optimized */}
+        <Card>
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Mail className="h-4 w-4" />
+              Sent Messages ({sentMessages.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {sentMessages.length === 0 ? (
+              <div className="text-center py-6 lg:py-8 text-muted-foreground">
+                <Mail className="h-6 w-6 lg:h-8 lg:w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">No messages sent</p>
+                <p className="text-xs">Your sent messages appear here</p>
+              </div>
+            ) : (
+              <ScrollArea className="h-[250px] lg:h-[300px]">
+                <div className="space-y-3">
+                  {sentMessages.slice(0, 10).map((msg, index) => (
+                    <div key={index} className="p-3 bg-muted/30 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <Badge variant="outline" className="text-xs">
+                          To: {msg.to.substring(0, 8)}...
+                        </Badge>
+                        <div className="flex items-center gap-1">
+                          {msg.delivered ? (
+                            <CheckCircle className="h-3 w-3 text-green-500" />
+                          ) : (
+                            <Clock className="h-3 w-3 text-yellow-500" />
+                          )}
+                        </div>
+                      </div>
+                      
+                      <p className="text-sm mb-2 line-clamp-2">
+                        {msg.content.length > 60 ? `${msg.content.substring(0, 60)}...` : msg.content}
+                      </p>
+                      
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Hash className="h-3 w-3" />
+                          PoW: {msg.pow.computeTime.toFixed(1)}s
+                        </span>
+                        <span>{new Date(msg.timestamp).toLocaleTimeString()}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Network Status - Mobile Compact */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              Security Status
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="flex items-center gap-2">
+                  <Lock className="h-3 w-3 text-green-500" />
+                  Encryption
+                </span>
+                <Badge variant="default" className="text-xs">Active</Badge>
+              </div>
+              
+              <div className="flex items-center justify-between text-sm">
+                <span className="flex items-center gap-2">
+                  <Hash className="h-3 w-3 text-blue-500" />
+                  Proof-of-Work
+                </span>
+                <Badge variant="default" className="text-xs">Level {powDifficulty}</Badge>
+              </div>
+              
+              <div className="flex items-center justify-between text-sm">
+                <span className="flex items-center gap-2">
+                  <Shield className="h-3 w-3 text-purple-500" />
+                  Identity
+                </span>
+                <Badge variant={activeIdentity ? "default" : "secondary"} className="text-xs">
+                  {activeIdentity ? "Active" : "None"}
+                </Badge>
+              </div>
             </div>
           </CardContent>
         </Card>
-      )}
+      </div>
     </div>
   );
 }
