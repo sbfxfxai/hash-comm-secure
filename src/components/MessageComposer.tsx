@@ -361,7 +361,7 @@ export function MessageComposer() {
             <BitCommButton
               onClick={sendMessage}
               disabled={!message.trim() || !recipient.trim() || isSending || !activeIdentity}
-              className={`w-full py-3 transition-all ${
+              className={`w-full bg-gradient-primary py-3 transition-all ${
                 !activeIdentity 
                   ? 'bg-muted text-muted-foreground cursor-not-allowed' 
                   : 'bg-gradient-primary hover:bg-gradient-primary/90'
