@@ -2,50 +2,75 @@ import { ProofOfWorkDemo } from '@/components/ProofOfWorkDemo';
 import { IdentityManager } from '@/components/IdentityManager';
 import { MessageComposer } from '@/components/MessageComposer';
 import { P2PNetworkStatus } from '@/components/P2PNetworkStatus';
+import { AdminDashboard } from '@/components/AdminDashboard';
+import { AuthModal } from '@/components/AuthModal';
+import { PricingPage } from '@/components/PricingPage';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { UserProfile } from '@/components/UserProfile';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BitCommButton } from '@/components/ui/bitcomm-button';
-import { Bitcoin, Shield, Zap, Users } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/contexts/AuthContext';
+import { Bitcoin, Shield, Zap, Users, LogOut, User, CreditCard } from 'lucide-react';
 
 const Index = () => {
+  const { user, signOut, loading } = useAuth()
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-hero py-20">
-        <div className="absolute inset-0 bg-gradient-glow opacity-50"></div>
-        <div className="relative container mx-auto px-4 text-center">
-          <div className="flex items-center justify-center mb-6">
-            <Bitcoin className="h-16 w-16 text-white mr-4" />
-            <h1 className="text-5xl font-bold text-white">BitComm</h1>
-          </div>
-          <p className="text-xl text-white/90 mb-8 max-w-3xl mx-auto">
-            Revolutionary decentralized communication that fixes email's problems using Bitcoin's proven hash principles. 
-            Say goodbye to spam, data breaches, and centralized control.
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full text-white">
-              <Shield className="h-4 w-4" />
-              <span>Bitcoin-Secured Identity</span>
-            </div>
-            <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full text-white">
-              <Zap className="h-4 w-4" />
-              <span>Proof-of-Work Anti-Spam</span>
-            </div>
-            <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full text-white">
-              <Users className="h-4 w-4" />
-              <span>P2P Decentralized</span>
-            </div>
-          </div>
+      <header className="p-4 border-b flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <Bitcoin className="h-8 w-8 text-bitcoin-orange" />
+          <h1 className="text-2xl font-bold">BitComm</h1>
         </div>
-      </section>
+        <div>
+          {loading ? (
+            <div className="h-8 w-8 bg-muted rounded-full animate-pulse" />
+          ) : user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user.user_metadata.avatar_url} alt={user.user_metadata.full_name} />
+                    <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  <span>Billing</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={signOut}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Sign Out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <AuthModal>
+              <BitCommButton variant="hero">Sign In</BitCommButton>
+            </AuthModal>
+          )}
+        </div>
+      </header>
 
       {/* Main Content */}
       <section className="container mx-auto px-4 py-12">
         <Tabs defaultValue="network" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
+          <TabsList className="grid w-full grid-cols-6 mb-8">
             <TabsTrigger value="network">P2P Network</TabsTrigger>
             <TabsTrigger value="composer">Message Composer</TabsTrigger>
             <TabsTrigger value="pow">Proof-of-Work Demo</TabsTrigger>
             <TabsTrigger value="identity">Identity Manager</TabsTrigger>
+            <TabsTrigger value="enterprise">Enterprise</TabsTrigger>
+            <TabsTrigger value="profile">Profile</TabsTrigger>
           </TabsList>
           
           <TabsContent value="network" className="space-y-6">
@@ -90,6 +115,34 @@ const Index = () => {
               </p>
             </div>
             <IdentityManager />
+          </TabsContent>
+
+          <TabsContent value="enterprise" className="space-y-6">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold mb-4">Enterprise Dashboard</h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Manage premium identities, generate compliance reports, and view network analytics.
+              </p>
+            </div>
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          </TabsContent>
+
+          <TabsContent value="profile" className="space-y-6">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold mb-4">User Profile</h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Manage your BitComm account settings and view your authentication details.
+              </p>
+            </div>
+            <ProtectedRoute>
+              <UserProfile />
+            </ProtectedRoute>
+          </TabsContent>
+
+          <TabsContent value="pricing">
+            <PricingPage />
           </TabsContent>
         </Tabs>
       </section>

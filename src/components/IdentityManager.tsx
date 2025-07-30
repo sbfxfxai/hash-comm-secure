@@ -6,7 +6,28 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { generateBitCommIdentity, type BitCommAddress } from '@/lib/bitcomm';
-import { User, Key, Hash, Plus, Trash2, Eye, EyeOff, Copy, Bitcoin } from 'lucide-react';
+import { 
+  PremiumIdentityService, 
+  type PremiumIdentity,
+  type VerificationBadge 
+} from '@/lib/premiumIdentity';
+import { 
+  User, 
+  Key, 
+  Hash, 
+  Plus, 
+  Trash2, 
+  Eye, 
+  EyeOff, 
+  Copy, 
+  Bitcoin, 
+  CheckCircle, 
+  Crown, 
+  Building, 
+  Globe, 
+  Smartphone,
+  Shield 
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface StoredIdentity extends BitCommAddress {
@@ -16,25 +37,35 @@ interface StoredIdentity extends BitCommAddress {
 
 export function IdentityManager() {
   const [identities, setIdentities] = useState<StoredIdentity[]>([]);
+  const [premiumIdentities, setPremiumIdentities] = useState<PremiumIdentity[]>([]);
   const [showPrivateKeys, setShowPrivateKeys] = useState<{ [key: string]: boolean }>({});
   const [newIdentityName, setNewIdentityName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const { toast } = useToast();
 
-  // Load identities from localStorage on mount
+  // Load identities from localStorage and Supabase on mount
   useEffect(() => {
-    const stored = localStorage.getItem('bitcomm-identities');
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        setIdentities(parsed.map((id: any) => ({
-          ...id,
-          created: new Date(id.created)
-        })));
-      } catch (error) {
-        console.error('Failed to load identities:', error);
+    const loadData = async () => {
+      // Load local identities
+      const stored = localStorage.getItem('bitcomm-identities');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          setIdentities(parsed.map((id: any) => ({
+            ...id,
+            created: new Date(id.created)
+          })));
+        } catch (error) {
+          console.error('Failed to load identities:', error);
+        }
       }
-    }
+
+      // Load premium identities (assuming a logged-in user)
+      const user_id = '<USER_ID>'; // Replace with actual user ID
+      const premium = await PremiumIdentityService.getUserIdentities(user_id);
+      setPremiumIdentities(premium);
+    };
+    loadData();
   }, []);
 
   // Save identities to localStorage
@@ -128,6 +159,25 @@ export function IdentityManager() {
     return `${address.substring(0, 8)}...${address.substring(address.length - 8)}`;
   };
 
+  const renderVerificationBadge = (identity: PremiumIdentity) => {
+    const badge = PremiumIdentityService.getVerificationBadge(identity);
+    if (!badge) return null;
+
+    const Icon = {
+      CheckCircle,
+      Building,
+      Globe,
+      Crown
+    }[badge.icon] || Shield;
+
+    return (
+      <Badge className={`${badge.color} bg-opacity-10`}>
+        <Icon className="h-4 w-4 mr-1" />
+        {badge.label}
+      </Badge>
+    );
+  };
+
   return (
     <div className="space-y-6">
       {/* Create New Identity */}
@@ -187,6 +237,31 @@ export function IdentityManager() {
         </CardContent>
       </Card>
 
+      {/* Premium Identities */}
+      {premiumIdentities.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Crown className="h-5 w-5 text-gold-500" />
+              Premium Identities
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {premiumIdentities.map(identity => (
+              <div key={identity.id} className="p-4 border rounded-lg mb-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-bold">{identity.name}</h3>
+                    <p className="text-sm text-muted-foreground">{formatAddress(identity.address)}</p>
+                  </div>
+                  {renderVerificationBadge(identity)}
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Existing Identities */}
       {identities.length > 0 && (
         <Card>
@@ -199,166 +274,6 @@ export function IdentityManager() {
               Each identity is cryptographically secured and registered on Bitcoin
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {identities.map((identity) => (
-              <div 
-                key={identity.address} 
-                className={`p-4 rounded-lg border transition-all ${
-                  identity.isActive 
-                    ? 'border-bitcoin-orange bg-bitcoin-orange/5' 
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-semibold">{identity.name}</h4>
-                      {identity.isActive && (
-                        <Badge variant="default" className="bg-bitcoin-orange">
-                          Active
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Created {identity.created.toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    {!identity.isActive && (
-                      <BitCommButton
-                        onClick={() => setActiveIdentity(identity.address)}
-                        variant="outline"
-                        size="sm"
-                      >
-                        Set Active
-                      </BitCommButton>
-                    )}
-                    <BitCommButton
-                      onClick={() => deleteIdentity(identity.address)}
-                      variant="destructive"
-                      size="sm"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </BitCommButton>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  {/* BitComm Address */}
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground">
-                      BITCOMM ADDRESS (PUBLIC)
-                    </Label>
-                    <div className="flex items-center gap-2 mt-1">
-                      <div className="bg-gray-100 p-2 rounded font-mono text-sm flex-1 break-all">
-                        {identity.address}
-                      </div>
-                      <BitCommButton
-                        onClick={() => copyToClipboard(identity.address, 'Address')}
-                        variant="outline"
-                        size="sm"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </BitCommButton>
-                    </div>
-                  </div>
-
-                  {/* Public Key */}
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground">
-                      PUBLIC KEY
-                    </Label>
-                    <div className="flex items-center gap-2 mt-1">
-                      <div className="bg-gray-100 p-2 rounded font-mono text-sm flex-1 break-all">
-                        {formatAddress(identity.publicKey)}
-                      </div>
-                      <BitCommButton
-                        onClick={() => copyToClipboard(identity.publicKey, 'Public Key')}
-                        variant="outline"
-                        size="sm"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </BitCommButton>
-                    </div>
-                  </div>
-
-                  {/* Private Key */}
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <Label className="text-xs font-medium text-muted-foreground">
-                        PRIVATE KEY (KEEP SECRET!)
-                      </Label>
-                      <BitCommButton
-                        onClick={() => togglePrivateKeyVisibility(identity.address)}
-                        variant="ghost"
-                        size="sm"
-                      >
-                        {showPrivateKeys[identity.address] ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </BitCommButton>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="bg-red-50 border border-red-200 p-2 rounded font-mono text-sm flex-1 break-all">
-                        {showPrivateKeys[identity.address] 
-                          ? identity.privateKey 
-                          : '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••'
-                        }
-                      </div>
-                      {showPrivateKeys[identity.address] && (
-                        <BitCommButton
-                          onClick={() => copyToClipboard(identity.privateKey, 'Private Key')}
-                          variant="outline"
-                          size="sm"
-                        >
-                          <Copy className="h-4 w-4" />
-                        </BitCommButton>
-                      )}
-                    </div>
-                    <p className="text-xs text-red-600 mt-1">
-                      ⚠️ Never share your private key. It controls your identity!
-                    </p>
-                  </div>
-                </div>
-
-                <Separator className="my-3" />
-
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Hash className="h-3 w-3" />
-                    SHA-256 Secured
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Bitcoin className="h-3 w-3" />
-                    Bitcoin Verified
-                  </div>
-                  <div className="text-green-600">✓ Immutable</div>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Getting Started */}
-      {identities.length === 0 && (
-        <Card className="border-blue-200 bg-blue-50/50">
-          <CardContent className="pt-6">
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
-                <User className="h-8 w-8 text-blue-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-blue-900">No Identities Yet</h3>
-                <p className="text-sm text-blue-700 mt-1">
-                  Create your first BitComm identity to start sending secure, spam-free messages.
-                  Unlike email addresses, you have full control over your identity.
-                </p>
-              </div>
-            </div>
-          </CardContent>
         </Card>
       )}
     </div>

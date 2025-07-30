@@ -337,11 +337,35 @@ export function MessageComposer() {
               </div>
             )}
 
+            {/* Identity Warning - Show when no active identity */}
+            {!activeIdentity && (
+              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertCircle className="h-4 w-4 text-yellow-600" />
+                  <span className="text-sm font-medium text-yellow-800">No Active Identity</span>
+                </div>
+                <p className="text-xs text-yellow-700 mb-3">
+                  You need to create and activate an identity before sending messages.
+                </p>
+                <div className="flex items-center gap-2 text-xs text-yellow-600">
+                  <span>💡 Go to</span>
+                  <Badge variant="outline" className="text-yellow-700 border-yellow-300">
+                    Identity Manager
+                  </Badge>
+                  <span>→ Create Identity → Activate it</span>
+                </div>
+              </div>
+            )}
+
             {/* Send Button - Full Width on Mobile */}
             <BitCommButton
               onClick={sendMessage}
               disabled={!message.trim() || !recipient.trim() || isSending || !activeIdentity}
-              className="w-full bg-gradient-primary py-3"
+              className={`w-full py-3 transition-all ${
+                !activeIdentity 
+                  ? 'bg-muted text-muted-foreground cursor-not-allowed' 
+                  : 'bg-gradient-primary hover:bg-gradient-primary/90'
+              }`}
             >
               {isSending ? (
                 <>
@@ -351,7 +375,7 @@ export function MessageComposer() {
               ) : (
                 <>
                   <Send className="h-4 w-4 mr-2" />
-                  Send Encrypted Message
+                  {!activeIdentity ? 'Identity Required' : 'Send Encrypted Message'}
                 </>
               )}
             </BitCommButton>
