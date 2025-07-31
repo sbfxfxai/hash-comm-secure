@@ -25,18 +25,15 @@ export class WebRTCP2PNetwork {
   private messageHandlers: Set<(envelope: MessageEnvelope) => void> = new Set();
   private isInitialized = false;
   private localPeerId: string = '';
-  private signalingWs: WebSocket | null = null;
-  private bitcommAddress: string = '';
-  private signalingServerUrl: string;
-  private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
-  private reconnectDelay = 1000;
+private dhtNode: any; // Placeholder for DHT node library
+  private messageQueue: Map<string, MessageEnvelope[]> = new Map();
 
   constructor() {
-    // Set signaling server URL based on environment
-    this.signalingServerUrl = process.env.NODE_ENV === 'production' 
-      ? 'wss://bitcomm-signaling.herokuapp.com' // Production signaling server
-      : 'ws://localhost:8080'; // Local development
+// Initialize DHT node for decentralized peer discovery
+    this.dhtNode = initializeDHTNode(); // DHT library to use
+
+    // Auto reconnect settings
+    this.setupReconnection();
   }
 
   async initialize(bitcommAddress: string): Promise<P2PNode> {
@@ -46,8 +43,9 @@ export class WebRTCP2PNetwork {
       this.bitcommAddress = bitcommAddress;
       this.isInitialized = true;
 
-      // Connect to real signaling server
-      await this.connectToSignalingServer();
+// Use DHT for peer discovery
+      await this.dhtNode.start();
+      console.log('DHT node started for peer discovery');
       
       const p2pNode: P2PNode = {
         peerId: this.localPeerId,
@@ -68,52 +66,6 @@ export class WebRTCP2PNetwork {
     }
   }
 
-  private async connectToSignalingServer(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      try {
-        this.signalingWs = new WebSocket(this.signalingServerUrl);
-
-        this.signalingWs.onopen = () => {
-          console.log('🔗 Connected to signaling server');
-          // Register with BitComm address
-          this.signalingWs?.send(JSON.stringify({
-            type: 'register',
-            bitcommAddress: this.bitcommAddress
-          }));
-        };
-
-        this.signalingWs.onmessage = (event) => {
-          this.handleSignalingMessage(JSON.parse(event.data));
-        };
-
-        this.signalingWs.onerror = (error) => {
-          console.error('Signaling server error:', error);
-          reject(error);
-        };
-
-        this.signalingWs.onclose = () => {
-          console.log('Signaling server disconnected');
-          if (this.reconnectAttempts < this.maxReconnectAttempts) {
-            setTimeout(() => this.attemptReconnect(), this.reconnectDelay);
-          }
-        };
-
-        // Set peer ID on welcome message
-        const welcomeHandler = (event: MessageEvent) => {
-          const data = JSON.parse(event.data);
-          if (data.type === 'welcome') {
-            this.localPeerId = data.peerId;
-            resolve();
-          }
-        };
-
-        this.signalingWs.addEventListener('message', welcomeHandler, { once: true });
-
-      } catch (error) {
-        reject(error);
-      }
-    });
-  }
 
   private initializeDemoMode(): P2PNode {
     this.localPeerId = 'demo-peer-' + Math.random().toString(36).substring(2, 8);
@@ -172,12 +124,29 @@ export class WebRTCP2PNetwork {
     console.log('Handling WebRTC signaling:', message.type);
   }
 
-  private attemptReconnect(): void {
-    this.reconnectAttempts++;
-    console.log(`Attempting reconnect ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
-    this.connectToSignalingServer().catch(() => {
-      this.reconnectDelay *= 2; // Exponential backoff
+private setupReconnection(): void {
+    this.dhtNode.on('peer:discover', (peer) => {
+      console.log('Discovered new peer via DHT:', peer);
+      this.initiateConnections([peer]);
     });
+  }
+
+  private queueMessage(targetPeerId: string, envelope: MessageEnvelope): void {
+    if (!this.messageQueue.has(targetPeerId)) {
+      this.messageQueue.set(targetPeerId, []);
+    }
+    this.messageQueue.get(targetPeerId)!.push(envelope);
+  }
+
+  private processQueuedMessages(peerId: string): void {
+    const queuedMessages = this.messageQueue.get(peerId);
+    if (queuedMessages) {
+      queuedMessages.forEach((envelope) => {
+        this.sendMessage(envelope, peerId);
+      });
+      this.messageQueue.delete(peerId);
+      console.log('Processed queued messages for peer:', peerId);
+    }
   }
 
   private async setupWebRTCSignaling(): Promise<void> {
