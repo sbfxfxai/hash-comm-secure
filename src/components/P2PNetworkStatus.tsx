@@ -4,7 +4,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { BitCommButton } from '@/components/ui/bitcomm-button';
 import { Wifi, WifiOff, Users, Activity, Radio } from 'lucide-react';
-import { webrtcP2P as bitcommP2P, MessageEnvelope } from '@/lib/webrtc-p2p';
+import { WebRTCP2PNetwork, MessageEnvelope } from '@/lib/p2p/webrtc-p2p';
+
+// Initialize singleton instance
+const bitcommP2P = new WebRTCP2PNetwork();
 import { useToast } from '@/hooks/use-toast';
 
 export const P2PNetworkStatus = () => {

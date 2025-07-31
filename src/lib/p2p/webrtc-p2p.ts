@@ -1,5 +1,6 @@
 // Real WebRTC P2P implementation for BitComm with production signaling
-import { BitCommMessage, verifyProofOfWork } from './bitcomm';
+import { BitCommMessage, verifyProofOfWork } from '../bitcomm';
+import { initializeDHTNode } from '../dht';
 
 export interface P2PNode {
   peerId: string;
@@ -37,14 +38,33 @@ export class WebRTCP2PNetwork {
     this.setupReconnection();
   }
 
-  private initializeDHTNode() {
-    // Simple DHT simulation for now
+  private async initializeDHTNode() {
+    // Initialize real DHT node for true decentralization
+    try {
+      const dhtNode = await initializeDHTNode();
+      await dhtNode.start();
+      
+      dhtNode.on('peer:connect', (peer) => {
+        console.log('🔗 DHT peer connected:', peer.nodeId);
+        this.createPeerConnection(peer.nodeId);
+      });
+      
+      dhtNode.on('peer:discover', (peer) => {
+        console.log('🔍 DHT peer discovered:', peer.nodeId);
+        this.createPeerConnection(peer.nodeId);
+      });
+      
+      return dhtNode;
+    } catch (error) {
+      console.warn('DHT initialization failed, using fallback:', error);
+      return this.createFallbackDHT();
+    }
+  }
+
+  private createFallbackDHT() {
     return {
-      start: async () => {
-        console.log('DHT node started');
-      },
+      start: async () => console.log('DHT fallback started'),
       on: (event: string, callback: (peer: any) => void) => {
-        // Simulate peer discovery
         if (event === 'peer:discover') {
           setTimeout(() => {
             callback({ peerId: 'dht-peer-' + Math.random().toString(36).substring(2, 8) });
