@@ -25,15 +25,33 @@ export class WebRTCP2PNetwork {
   private messageHandlers: Set<(envelope: MessageEnvelope) => void> = new Set();
   private isInitialized = false;
   private localPeerId: string = '';
-private dhtNode: any; // Placeholder for DHT node library
+  private bitcommAddress: string = '';
+  private dhtNode: any; // Placeholder for DHT node library
   private messageQueue: Map<string, MessageEnvelope[]> = new Map();
 
   constructor() {
-// Initialize DHT node for decentralized peer discovery
-    this.dhtNode = initializeDHTNode(); // DHT library to use
+    // Initialize DHT node for decentralized peer discovery
+    this.dhtNode = this.initializeDHTNode();
 
     // Auto reconnect settings
     this.setupReconnection();
+  }
+
+  private initializeDHTNode() {
+    // Simple DHT simulation for now
+    return {
+      start: async () => {
+        console.log('DHT node started');
+      },
+      on: (event: string, callback: (peer: any) => void) => {
+        // Simulate peer discovery
+        if (event === 'peer:discover') {
+          setTimeout(() => {
+            callback({ peerId: 'dht-peer-' + Math.random().toString(36).substring(2, 8) });
+          }, 5000);
+        }
+      }
+    };
   }
 
   async initialize(bitcommAddress: string): Promise<P2PNode> {
