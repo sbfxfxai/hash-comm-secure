@@ -1,12 +1,16 @@
-import { ProofOfWorkDemo } from '@/components/ProofOfWorkDemo';
-import { IdentityManager } from '@/components/IdentityManager';
-import { MessageComposer } from '@/components/MessageComposer';
-import { P2PNetworkStatus } from '@/components/P2PNetworkStatus';
-import { AdminDashboard } from '@/components/AdminDashboard';
+import { Suspense, lazy } from 'react';
 import { AuthModal } from '@/components/AuthModal';
-import { PricingPage } from '@/components/PricingPage';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
-import { UserProfile } from '@/components/UserProfile';
+import { Skeleton } from '@/components/ui/skeleton';
+
+// Lazy load heavy components
+const ProofOfWorkDemo = lazy(() => import('@/components/ProofOfWorkDemo').then(m => ({ default: m.ProofOfWorkDemo })));
+const IdentityManager = lazy(() => import('@/components/IdentityManager').then(m => ({ default: m.IdentityManager })));
+const MessageComposer = lazy(() => import('@/components/MessageComposer').then(m => ({ default: m.MessageComposer })));
+const P2PNetworkStatus = lazy(() => import('@/components/P2PNetworkStatus').then(m => ({ default: m.P2PNetworkStatus })));
+const AdminDashboard = lazy(() => import('@/components/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
+const PricingPage = lazy(() => import('@/components/PricingPage').then(m => ({ default: m.PricingPage })));
+const UserProfile = lazy(() => import('@/components/UserProfile').then(m => ({ default: m.UserProfile })));
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BitCommButton } from '@/components/ui/bitcomm-button';
 import { Button } from '@/components/ui/button';
@@ -14,6 +18,18 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
 import { Bitcoin, Shield, Zap, Users, LogOut, User, CreditCard } from 'lucide-react';
+
+// Component skeleton for loading states
+const ComponentSkeleton = () => (
+  <div className="space-y-4">
+    <Skeleton className="h-8 w-48 mx-auto" />
+    <Skeleton className="h-64 w-full" />
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <Skeleton className="h-32 w-full" />
+      <Skeleton className="h-32 w-full" />
+    </div>
+  </div>
+);
 
 const Index = () => {
   const { user, signOut, loading } = useAuth()
@@ -81,7 +97,9 @@ const Index = () => {
                 just peer-to-peer communication with Bitcoin-level security.
               </p>
             </div>
-            <P2PNetworkStatus />
+            <Suspense fallback={<ComponentSkeleton />}>
+              <P2PNetworkStatus />
+            </Suspense>
           </TabsContent>
           
           <TabsContent value="composer" className="space-y-6">
@@ -92,7 +110,9 @@ const Index = () => {
                 Bitcoin-style proof-of-work anti-spam technology.
               </p>
             </div>
-            <MessageComposer />
+            <Suspense fallback={<ComponentSkeleton />}>
+              <MessageComposer />
+            </Suspense>
           </TabsContent>
           
           <TabsContent value="pow" className="space-y-6">
@@ -103,7 +123,9 @@ const Index = () => {
                 while keeping legitimate communication free and instant.
               </p>
             </div>
-            <ProofOfWorkDemo />
+            <Suspense fallback={<ComponentSkeleton />}>
+              <ProofOfWorkDemo />
+            </Suspense>
           </TabsContent>
           
           <TabsContent value="identity" className="space-y-6">
@@ -114,7 +136,9 @@ const Index = () => {
                 No more permanent email addresses you can't revoke when compromised.
               </p>
             </div>
-            <IdentityManager />
+            <Suspense fallback={<ComponentSkeleton />}>
+              <IdentityManager />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="enterprise" className="space-y-6">
@@ -125,7 +149,9 @@ const Index = () => {
               </p>
             </div>
             <ProtectedRoute>
-              <AdminDashboard />
+              <Suspense fallback={<ComponentSkeleton />}>
+                <AdminDashboard />
+              </Suspense>
             </ProtectedRoute>
           </TabsContent>
 
@@ -137,12 +163,16 @@ const Index = () => {
               </p>
             </div>
             <ProtectedRoute>
-              <UserProfile />
+              <Suspense fallback={<ComponentSkeleton />}>
+                <UserProfile />
+              </Suspense>
             </ProtectedRoute>
           </TabsContent>
 
           <TabsContent value="pricing">
-            <PricingPage />
+            <Suspense fallback={<ComponentSkeleton />}>
+              <PricingPage />
+            </Suspense>
           </TabsContent>
         </Tabs>
       </section>

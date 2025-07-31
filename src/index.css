@@ -1,3 +1,22 @@
+/* Critical CSS - Load immediately */
+@layer critical {
+  /* Above-the-fold styles */
+  .min-h-screen { min-height: 100vh; }
+  .bg-background { background-color: hsl(var(--background)); }
+  .text-foreground { color: hsl(var(--foreground)); }
+  .border-b { border-bottom-width: 1px; }
+  .flex { display: flex; }
+  .items-center { align-items: center; }
+  .justify-between { justify-content: space-between; }
+  .gap-2 { gap: 0.5rem; }
+  .p-4 { padding: 1rem; }
+  .text-2xl { font-size: 1.5rem; line-height: 2rem; }
+  .font-bold { font-weight: 700; }
+  .h-8 { height: 2rem; }
+  .w-8 { width: 2rem; }
+  .text-bitcoin-orange { color: hsl(var(--bitcoin-orange)); }
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
