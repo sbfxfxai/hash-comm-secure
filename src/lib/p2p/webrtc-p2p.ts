@@ -1,5 +1,5 @@
 // Real WebRTC P2P implementation for BitComm with production signaling
-import { BitCommMessage, verifyProofOfWork } from './bitcomm';
+import { BitCommMessage, verifyProofOfWork } from '../bitcomm';
 
 export interface P2PNode {
   peerId: string;
