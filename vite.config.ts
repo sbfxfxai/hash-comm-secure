@@ -39,6 +39,10 @@ export default defineConfig(({ mode }) => ({
         }
       }
     },
+    // Fix preload warnings
+    modulePreload: {
+      polyfill: false
+    },
     // Enable CSS code splitting
     cssCodeSplit: true,
     // Minification settings
