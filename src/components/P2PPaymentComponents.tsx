@@ -1,6 +1,6 @@
-// P2P Payment Components for BitComm
+// P2P Payment Components for BitComm - Enhanced with Lightning Tools
 import React, { useState, useEffect } from 'react'
-import { nwcService } from '@/lib/nwcEnhancedService'
+import { lightningTools } from '@/lib/lightningToolsService'
 import { bitcoinConnect } from '@/lib/bitcoinConnectService'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -43,7 +43,7 @@ export const P2PPaymentCard: React.FC<P2PPaymentProps> = ({
 
     setIsProcessing(true)
     try {
-      const result = await nwcService.processP2PPayment({
+      const result = await lightningTools.processP2PPayment({
         fromUserId: currentUserId,
         toUserId: recipientUserId,
         amount: parseInt(amount),
@@ -154,7 +154,7 @@ export const PaywallCard: React.FC<PaywallCardProps> = ({
   const handlePaywallPayment = async () => {
     setIsProcessing(true)
     try {
-      const { invoice, onPaid } = await nwcService.createPaywall({
+      const { invoice, verification } = await lightningTools.createPaywall({
         amount,
         description,
         feature,
@@ -167,8 +167,12 @@ export const PaywallCard: React.FC<PaywallCardProps> = ({
         if (onPaymentSuccess) onPaymentSuccess()
       })
 
-      // Wait for payment
-      await onPaid
+      // Wait for payment verification
+      const verified = await verification
+      if (verified) {
+        setPaymentResult({ success: true })
+        if (onPaymentSuccess) onPaymentSuccess()
+      }
     } catch (error) {
       setPaymentResult({ success: false, error: error.message })
     } finally {
@@ -241,7 +245,7 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({ userId }) => {
   const [payments, setPayments] = useState<any[]>([])
 
   useEffect(() => {
-    const history = nwcService.getP2PPaymentHistory(userId)
+    const history = lightningTools.getP2PPaymentHistory(userId)
     setPayments(history.slice(-10)) // Show last 10 payments
   }, [userId])
 

@@ -1,5 +1,5 @@
-// Bitcoin Connect Service for BitComm
-// Integrates Lightning wallet connectivity with WebLN
+// Bitcoin Connect Service for BitComm - Enhanced with Lightning Tools
+// Integrates Lightning wallet connectivity with WebLN and js-lightning-tools
 import {
   init,
   launchModal,
@@ -10,6 +10,7 @@ import {
   closeModal,
   disconnect
 } from '@getalby/bitcoin-connect'
+import { LightningAddress, fiat } from '@getalby/lightning-tools'
 
 export interface BitcoinConnectConfig {
   appName: string
@@ -113,7 +114,7 @@ class BitcoinConnectService {
     launchModal()
   }
 
-  // Process payment with developer revenue sharing
+  // Enhanced payment processing with Lightning Tools
   async processPayment(request: PaymentRequest): Promise<PaymentResult> {
     try {
       const provider = await this.getProvider()
@@ -124,17 +125,34 @@ class BitcoinConnectService {
 
       console.log(`💰 Processing payment: ${request.amount} sats (User: ${userAmount}, Dev: ${developerFee})`)
 
-      // Process main payment
-      const response = await provider.sendPayment(this.generateInvoice(userAmount, request.description))
+      // Use Lightning Address for more robust payment processing
+      const ln = new LightningAddress(this.config.developerAddress)
+      await ln.fetch()
       
-      if (response.preimage) {
-        // Process developer payment asynchronously
-        this.processDeveloperPayment(developerFee).catch(console.error)
+      // Request invoice for user amount
+      const invoice = await ln.requestInvoice({
+        satoshi: userAmount,
+        comment: request.description
+      })
+
+      if (invoice.paymentRequest) {
+        // Process payment
+        const response = await provider.sendPayment(invoice.paymentRequest)
         
-        return {
-          success: true,
-          preimage: response.preimage,
-          developerPayment: true
+        if (response.preimage) {
+          // Verify payment using Lightning Tools
+          const verified = invoice.validatePreimage(response.preimage)
+          
+          if (verified) {
+            // Process developer payment asynchronously
+            this.processDeveloperPayment(developerFee).catch(console.error)
+            
+            return {
+              success: true,
+              preimage: response.preimage,
+              developerPayment: true
+            }
+          }
         }
       }
 
@@ -222,19 +240,41 @@ class BitcoinConnectService {
     closeModal()
   }
 
-  // Private helper methods
-  private generateInvoice(amount: number, description: string): string {
-    // For demo - in production, generate real Lightning invoices
-    return `lnbc${amount}1demo${description.replace(/\s+/g, '').toLowerCase()}`
+  // Get fiat conversion using Lightning Tools
+  async getFiatValue(satoshi: number, currency: string = 'USD'): Promise<number> {
+    try {
+      return await fiat.getFiatValue({ satoshi, currency: currency.toLowerCase() })
+    } catch (error) {
+      console.error('❌ Fiat conversion failed:', error)
+      return 0
+    }
   }
 
+  // Get formatted fiat value
+  async getFormattedFiatValue(satoshi: number, currency: string = 'USD', locale: string = 'en'): Promise<string> {
+    try {
+      return await fiat.getFormattedFiatValue({ satoshi, currency: currency.toLowerCase(), locale })
+    } catch (error) {
+      console.error('❌ Formatted fiat conversion failed:', error)
+      return `${satoshi} sats`
+    }
+  }
+
+  // Private helper methods
   private async processDeveloperPayment(amount: number): Promise<void> {
     try {
       console.log(`💸 Processing developer fee: ${amount} sats to ${this.config.developerAddress}`)
       
-      // In production, this would send to your Lightning address
-      // For now, just log the transaction
-      console.log(`✅ Developer revenue share processed: ${amount} sats`)
+      // Use Lightning Address for developer payment
+      const developerLN = new LightningAddress(this.config.developerAddress)
+      await developerLN.fetch()
+      
+      const invoice = await developerLN.requestInvoice({
+        satoshi: amount,
+        comment: 'BitComm Developer Revenue Share'
+      })
+      
+      console.log(`✅ Developer revenue invoice created: ${amount} sats`)
     } catch (error) {
       console.error('❌ Developer payment failed:', error)
     }
