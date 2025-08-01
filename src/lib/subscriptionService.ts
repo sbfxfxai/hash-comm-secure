@@ -1,158 +1,163 @@
-import { bitcoinPayments } from '@/lib/p2p/bitcoin-payments'
-import { UsageEventData } from '@/types/database'
-
-export type SubscriptionTier = 'free' | 'premium' | 'business' | 'enterprise'
-export type SubscriptionStatus = 'active' | 'inactive' | 'cancelled' | 'past_due'
-
-export interface Subscription {
-  id: string
-  user_id: string
-  tier: SubscriptionTier
-  status: SubscriptionStatus
-  stripe_customer_id?: string
-  stripe_subscription_id?: string
-  current_period_start?: string
-  current_period_end?: string
-  cancel_at_period_end: boolean
-  created_at: string
-  updated_at: string
-}
+// Decentralized Subscription Service - Bitcoin Lightning Only
+import { bitcoinPayments } from './p2p/bitcoin-payments'
 
 export interface SubscriptionPlan {
-  tier: SubscriptionTier
-  name: string
-  description: string
-  monthlyPrice: number
-  yearlyPrice: number
-  features: string[]
-  identityLimit: number
-  deviceSyncEnabled: boolean
-  verificationLevels: string[]
-  support: string
-  popular?: boolean
+  id: string;
+  name: string;
+  description: string;
+  price_sats: number;
+  price_usd: number;
+  features: string[];
+  billing_interval: 'monthly' | 'yearly';
+  max_identities: number;
+  storage_gb: number;
+  priority_support: boolean;
+  verification_included: boolean;
 }
 
-export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
-  {
-    tier: 'free',
-    name: 'Free',
-    description: 'Perfect for personal use',
-    monthlyPrice: 0,
-    yearlyPrice: 0,
-    features: [
-      'Basic identity creation',
-      'Encrypted messaging',
-      'Proof-of-work anti-spam',
-      'P2P networking',
-      'Local storage only'
-    ],
-    identityLimit: 3,
-    deviceSyncEnabled: false,
-    verificationLevels: [],
-    support: 'Community'
-  },
-  {
-    tier: 'premium',
-    name: 'Premium',
-    description: 'Enhanced features for power users',
-    monthlyPrice: 9.99,
-    yearlyPrice: 99.99,
-    features: [
-      'Everything in Free',
-      'Verified identity badges',
-      'Multi-device sync',
-      'Cloud backup',
-      'Advanced encryption',
-      'Priority support'
-    ],
-    identityLimit: 10,
-    deviceSyncEnabled: true,
-    verificationLevels: ['basic'],
-    support: 'Email',
-    popular: true
-  },
-  {
-    tier: 'business',
-    name: 'Business',
-    description: 'Professional features for teams',
-    monthlyPrice: 29.99,
-    yearlyPrice: 299.99,
-    features: [
-      'Everything in Premium',
-      'Business verification',
-      'Domain-linked identities',
-      'Team management',
-      'Compliance reporting',
-      'API access'
-    ],
-    identityLimit: 50,
-    deviceSyncEnabled: true,
-    verificationLevels: ['basic', 'business', 'domain'],
-    support: 'Priority Email'
-  },
-  {
-    tier: 'enterprise',
-    name: 'Enterprise',
-    description: 'Full-scale enterprise solution',
-    monthlyPrice: 99.99,
-    yearlyPrice: 999.99,
-    features: [
-      'Everything in Business',
-      'Enterprise verification',
-      'Custom deployment',
-      'Advanced analytics',
-      'Audit trails',
-      'Dedicated support',
-      'SLA guarantee'
-    ],
-    identityLimit: -1, // unlimited
-    deviceSyncEnabled: true,
-    verificationLevels: ['basic', 'business', 'domain', 'enterprise'],
-    support: 'Dedicated Manager'
-  }
-]
+export interface Subscription {
+  id: string;
+  user_id: string;
+  plan_id: string;
+  status: 'active' | 'inactive' | 'cancelled' | 'expired';
+  lightning_payment_hash?: string;
+  created_at: string;
+  expires_at: string;
+  auto_renew: boolean;
+}
+
+export interface PricingTier {
+  name: string;
+  price_sats: number;
+  description: string;
+}
 
 export class SubscriptionService {
   
-// Get user's current subscription
-  static async getUserSubscription(userId: string): Promise<Subscription | null> {
-    // Subscriptions will now be tracked using Lightning Network payments
-    // Fetch from local storage based on successful bitcoin payments
-    const subscriptionData = localStorage.getItem(`subscription_${userId}`)
-    if (!subscriptionData) return null
-
-    return JSON.parse(subscriptionData) as Subscription
+  // Get available subscription plans
+  static getSubscriptionPlans(): SubscriptionPlan[] {
+    return [
+      {
+        id: 'basic',
+        name: 'Basic',
+        description: 'Essential decentralized identity features',
+        price_sats: 10000, // ~$4 at current rates
+        price_usd: 4,
+        features: [
+          '1 Premium Identity',
+          '1GB Decentralized Storage',
+          'Basic P2P Messaging',
+          'Standard Support'
+        ],
+        billing_interval: 'monthly',
+        max_identities: 1,
+        storage_gb: 1,
+        priority_support: false,
+        verification_included: false
+      },
+      {
+        id: 'professional',
+        name: 'Professional',
+        description: 'Advanced features for power users',
+        price_sats: 25000, // ~$10 at current rates
+        price_usd: 10,
+        features: [
+          '5 Premium Identities',
+          '10GB Decentralized Storage',
+          'Advanced P2P Messaging',
+          'Identity Verification',
+          'Priority Support'
+        ],
+        billing_interval: 'monthly',
+        max_identities: 5,
+        storage_gb: 10,
+        priority_support: true,
+        verification_included: true
+      },
+      {
+        id: 'enterprise',
+        name: 'Enterprise',
+        description: 'Full-featured plan for organizations',
+        price_sats: 100000, // ~$40 at current rates
+        price_usd: 40,
+        features: [
+          'Unlimited Premium Identities',
+          '100GB Decentralized Storage',
+          'Enterprise P2P Messaging',
+          'Advanced Identity Verification',
+          'Admin Dashboard',
+          'Compliance Reports',
+          '24/7 Priority Support'
+        ],
+        billing_interval: 'monthly',
+        max_identities: -1, // unlimited
+        storage_gb: 100,
+        priority_support: true,
+        verification_included: true
+      }
+    ]
   }
 
-// Create a new subscription using Bitcoin payments
-  static async createSubscription(params: {
-    userId: string
-    tier: SubscriptionTier
-  }): Promise<Subscription | null> {
-    const tierPricing = SUBSCRIPTION_PLANS.find(plan => plan.tier === params.tier)
-    if (!tierPricing) throw new Error('Invalid subscription tier')
+  // Get Bitcoin pricing tiers
+  static getBitcoinPricingTiers(): PricingTier[] {
+    return bitcoinPayments.getPricing()
+  }
 
-    const invoice = await bitcoinPayments.createPaymentRequest({
-      amountSats: tierPricing.monthlyPrice * 1000, // Convert to satoshis
-      description: `Subscribe to ${tierPricing.name}`
-    })
+  // Create subscription with Bitcoin payment
+  static async createSubscription(
+    userId: string, 
+    planId: string
+  ): Promise<{ success: boolean; subscription?: Subscription; invoice?: any }> {
+    try {
+      const plan = this.getSubscriptionPlans().find(p => p.id === planId)
+      if (!plan) {
+        throw new Error('Plan not found')
+      }
 
-    if (!invoice) throw new Error('Failed to create Bitcoin payment invoice')
+      // Generate Lightning invoice
+      const invoice = await bitcoinPayments.generateInvoice({
+        amount: plan.price_sats,
+        description: `BitComm ${plan.name} Subscription`
+      })
 
-    const subscription: Subscription = {
-      id: invoice,
-      user_id: params.userId,
-      tier: params.tier,
-      status: 'active',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      cancel_at_period_end: false
+      if (invoice) {
+        const subscription: Subscription = {
+          id: `sub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          user_id: userId,
+          plan_id: planId,
+          status: 'inactive', // becomes active after payment
+          lightning_payment_hash: invoice.payment_hash,
+          created_at: new Date().toISOString(),
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+          auto_renew: true
+        }
+
+        // Store subscription locally
+        this.storeSubscription(subscription)
+
+        return { 
+          success: true, 
+          subscription, 
+          invoice 
+        }
+      }
+
+      return { success: false }
+    } catch (error) {
+      console.error('Failed to create subscription:', error)
+      return { success: false }
     }
+  }
 
-    // Store subscription in local storage
-    localStorage.setItem(`subscription_${params.userId}`, JSON.stringify(subscription))
-
-    return subscription
+  // Get user subscription
+  static async getUserSubscription(userId: string): Promise<Subscription | null> {
+    try {
+      const subscriptions = this.getStoredSubscriptions()
+      return subscriptions.find(sub => sub.user_id === userId) || null
+    } catch (error) {
+      console.error('Failed to get user subscription:', error)
+      return null
+    }
   }
 
   // Update subscription
@@ -160,136 +165,73 @@ export class SubscriptionService {
     subscriptionId: string, 
     updates: Partial<Subscription>
   ): Promise<boolean> {
-    const { error } = await supabase
-      .from('subscriptions')
-      .update(updates)
-      .eq('id', subscriptionId)
-
-    if (error) {
+    try {
+      const subscriptions = this.getStoredSubscriptions()
+      const index = subscriptions.findIndex(sub => sub.id === subscriptionId)
+      
+      if (index !== -1) {
+        subscriptions[index] = { ...subscriptions[index], ...updates }
+        localStorage.setItem('subscriptions', JSON.stringify(subscriptions))
+        return true
+      }
+      
+      return false
+    } catch (error) {
       console.error('Error updating subscription:', error)
       return false
     }
-
-    return true
   }
 
   // Cancel subscription
   static async cancelSubscription(subscriptionId: string): Promise<boolean> {
-    const { error } = await supabase
-      .from('subscriptions')
-      .update({
-        status: 'cancelled',
-        cancel_at_period_end: true,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', subscriptionId)
-
-    if (error) {
-      console.error('Error cancelling subscription:', error)
-      return false
-    }
-
-    return true
+    return this.updateSubscription(subscriptionId, { 
+      status: 'cancelled',
+      auto_renew: false
+    })
   }
 
-  // Get subscription plan details
-  static getSubscriptionPlan(tier: SubscriptionTier): SubscriptionPlan {
-    return SUBSCRIPTION_PLANS.find(plan => plan.tier === tier) || SUBSCRIPTION_PLANS[0]
-  }
-
-  // Check if user has access to a feature
-  static async hasFeatureAccess(userId: string, feature: string): Promise<boolean> {
+  // Check if user has active subscription
+  static async hasActiveSubscription(userId: string): Promise<boolean> {
     const subscription = await this.getUserSubscription(userId)
-    if (!subscription) return false
-
-    const plan = this.getSubscriptionPlan(subscription.tier)
-    return plan.features.some(f => f.toLowerCase().includes(feature.toLowerCase()))
+    return subscription?.status === 'active' && new Date(subscription.expires_at) > new Date()
   }
 
-  // Check if user can create more identities
-  static async canCreateIdentity(userId: string, currentCount: number): Promise<boolean> {
-    const subscription = await this.getUserSubscription(userId)
-    if (!subscription) {
-      // Free tier default
-      return currentCount < SUBSCRIPTION_PLANS[0].identityLimit
-    }
-
-    const plan = this.getSubscriptionPlan(subscription.tier)
-    return plan.identityLimit === -1 || currentCount < plan.identityLimit
-  }
-
-  // Get usage statistics
-  static async getUsageStats(userId: string): Promise<{
-    identityCount: number
-    messagesThisMonth: number
-    deviceCount: number
+  // Get subscription analytics
+  static async getSubscriptionAnalytics(): Promise<{
+    totalSubscriptions: number;
+    activeSubscriptions: number;
+    revenue: { sats: number; usd: number };
+    popularPlan: string;
   }> {
-    // Get identity count
-    const { count: identityCount } = await supabase
-      .from('premium_identities')
-      .select('*', { count: 'exact' })
-      .eq('user_id', userId)
-
-    // Get messages this month (from usage tracking)
-    const startOfMonth = new Date()
-    startOfMonth.setDate(1)
-    startOfMonth.setHours(0, 0, 0, 0)
-
-    const { count: messagesThisMonth } = await supabase
-      .from('usage_tracking')
-      .select('*', { count: 'exact' })
-      .eq('user_id', userId)
-      .eq('event_type', 'message_sent')
-      .gte('timestamp', startOfMonth.toISOString())
-
-    // Get device count
-    const { data: identities } = await supabase
-      .from('premium_identities')
-      .select('id')
-      .eq('user_id', userId)
-
-    const identityIds = identities?.map(i => i.id) || []
+    const subscriptions = this.getStoredSubscriptions()
+    const activeSubscriptions = subscriptions.filter(sub => sub.status === 'active')
     
-    const { count: deviceCount } = await supabase
-      .from('device_sync')
-      .select('device_id', { count: 'exact' })
-      .in('identity_id', identityIds)
-
     return {
-      identityCount: identityCount || 0,
-      messagesThisMonth: messagesThisMonth || 0,
-      deviceCount: deviceCount || 0
+      totalSubscriptions: subscriptions.length,
+      activeSubscriptions: activeSubscriptions.length,
+      revenue: { sats: 0, usd: 0 }, // Would calculate from payments
+      popularPlan: 'professional'
     }
   }
 
-  // Track usage event
-  static async trackUsage(userId: string, eventType: string, eventData: UsageEventData = {}): Promise<void> {
-    await supabase
-      .from('usage_tracking')
-      .insert({
-        user_id: userId,
-        event_type: eventType,
-        event_data: eventData,
-        timestamp: new Date().toISOString()
-      })
+  // Private helper methods
+  private static storeSubscription(subscription: Subscription): void {
+    try {
+      const subscriptions = this.getStoredSubscriptions()
+      subscriptions.push(subscription)
+      localStorage.setItem('subscriptions', JSON.stringify(subscriptions))
+    } catch (error) {
+      console.error('Failed to store subscription:', error)
+    }
   }
 
-  // Get all subscriptions (admin only)
-  static async getAllSubscriptions(page = 1, pageSize = 20): Promise<Subscription[]> {
-    const { data, error } = await supabase
-      .from('subscriptions')
-      .select(`
-        *,
-        user_profiles!inner(full_name, avatar_url)
-      `)
-      .range((page - 1) * pageSize, page * pageSize - 1)
-      .order('created_at', { ascending: false })
-
-    if (error) {
-      console.error('Error fetching all subscriptions:', error)
+  private static getStoredSubscriptions(): Subscription[] {
+    try {
+      const stored = localStorage.getItem('subscriptions')
+      return stored ? JSON.parse(stored) : []
+    } catch (error) {
+      console.error('Failed to get stored subscriptions:', error)
       return []
     }
-
-    return data || []
   }
 }

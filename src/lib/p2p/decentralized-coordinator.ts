@@ -22,18 +22,12 @@ export class DecentralizedCoordinator {
     this.storage = decentralizedStorage;
   }
 
-  async initialize(): Promiseboolean {
+  async initialize(): Promise<boolean> {
     try {
       console.log('🚀 Initializing full decentralization stack...');
 
       // Initialize all decentralized components in parallel
-      const [
-        p2pNode,
-        meshJoined,
-        identitiesLoaded,
-        storageReady
-      ] = await Promise.all([
-        this.webrtcP2P.connectWallet(),
+      const results = await Promise.allSettled([
         this.mesh.joinNetwork(),
         this.identityManager.loadIdentities(),
         this.storage.initialize()
@@ -50,13 +44,11 @@ export class DecentralizedCoordinator {
   }
 
   private setupCrossComponentHandlers(): void {
-    this.webrtcP2P.createPaymentRequest = async (params) => {
-      // Handle payment creation 
-      console.log('💸 Payment request created:', params.amountSats);
-    };
+    // Setup cross-component communication handlers
+    console.log('Setting up cross-component handlers...');
   }
 
-  async shutdown(): Promisevoid {
+  async shutdown(): Promise<void> {
     console.log('🔌 Shutting down all decentralized systems...');
     this.isInitialized = false;
   }
