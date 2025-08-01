@@ -17,20 +17,19 @@ export interface AuditLogFilter {
 }
 
 export interface DashboardMetrics {
-  totalUsers: number
-  activeUsers: number
-  totalIdentities: number
-  verifiedIdentities: number
-  totalMessages: number
-  securityEvents: number
-  systemHealth: 'healthy' | 'warning' | 'critical'
+  [key: string]: {
+    name: string
+    value: string | number
+    health: 'healthy' | 'warning' | 'critical'
+  }
 }
 
 export class AdminService {
   
   // Fetch all premium identities for admin dashboard
   static async getAllIdentities(page = 1, pageSize = 20): Promise<PremiumIdentity[]> {
-    const { data, error } = await supabase
+// Replace with decentralized storage logic
+    const data = [], error = null
       .from('premium_identities')
       .select('*')
       .range((page - 1) * pageSize, page * pageSize - 1)
@@ -42,7 +41,8 @@ export class AdminService {
 
   // Get total number of identities
   static async getIdentitiesCount(): Promise<number> {
-    const { count, error } = await supabase
+// Replace with decentralized storage logic
+    const count = 0, error = null
       .from('premium_identities')
       .select('*', { count: 'exact' })
 
@@ -64,7 +64,8 @@ export class AdminService {
 
   // Fetch audit logs with optional filters
   static async getAuditLogs(filter: AuditLogFilter = {}, page = 1, pageSize = 20): Promise<AuditLog[]> {
-    let query = supabase.from('audit_logs').select('*')
+// Replace with decentralized storage logic
+    const data = [], error = null
     if (filter.userId) query = query.eq('user_id', filter.userId)
     if (filter.action) query = query.ilike('action', `%${filter.action}%`)
     if (filter.resourceType) query = query.eq('resource_type', filter.resourceType)
@@ -104,33 +105,91 @@ export class AdminService {
   static async getDashboardMetrics(): Promise<DashboardMetrics> {
     try {
       const [identitiesCount, verifiedCount, auditLogsCount, usageMetricsCount] = await Promise.all([
-        supabase.from('premium_identities').select('*', { count: 'exact' }).then(r => r.count || 0),
+// Replace with decentralized storage call
+          0
         supabase.from('premium_identities').select('*', { count: 'exact' }).eq('is_verified', true).then(r => r.count || 0),
         supabase.from('audit_logs').select('*', { count: 'exact' }).eq('severity', 'high').then(r => r.count || 0),
         supabase.from('usage_metrics').select('*', { count: 'exact' }).eq('metric_type', 'message_sent').then(r => r.count || 0)
       ])
 
       const systemHealth = auditLogsCount > 50 ? 'critical' : auditLogsCount > 10 ? 'warning' : 'healthy'
+      const activeUsers = Math.floor(identitiesCount * 0.7)
 
       return {
-        totalUsers: identitiesCount,
-        activeUsers: Math.floor(identitiesCount * 0.7), // Simulate active users
-        totalIdentities: identitiesCount,
-        verifiedIdentities: verifiedCount,
-        totalMessages: usageMetricsCount,
-        securityEvents: auditLogsCount,
-        systemHealth
+        totalUsers: {
+          name: 'Total Users',
+          value: identitiesCount,
+          health: 'healthy'
+        },
+        activeUsers: {
+          name: 'Active Users',
+          value: activeUsers,
+          health: activeUsers > 50 ? 'healthy' : activeUsers > 10 ? 'warning' : 'critical'
+        },
+        totalIdentities: {
+          name: 'Total Identities',
+          value: identitiesCount,
+          health: 'healthy'
+        },
+        verifiedIdentities: {
+          name: 'Verified Identities',
+          value: verifiedCount,
+          health: verifiedCount > identitiesCount * 0.8 ? 'healthy' : 'warning'
+        },
+        totalMessages: {
+          name: 'Total Messages',
+          value: usageMetricsCount,
+          health: 'healthy'
+        },
+        securityEvents: {
+          name: 'Security Events',
+          value: auditLogsCount,
+          health: systemHealth
+        },
+        systemHealth: {
+          name: 'System Health',
+          value: systemHealth.toUpperCase(),
+          health: systemHealth
+        }
       }
     } catch (error) {
       console.error('Error fetching dashboard metrics:', error)
       return {
-        totalUsers: 0,
-        activeUsers: 0,
-        totalIdentities: 0,
-        verifiedIdentities: 0,
-        totalMessages: 0,
-        securityEvents: 0,
-        systemHealth: 'healthy'
+        totalUsers: {
+          name: 'Total Users',
+          value: 0,
+          health: 'healthy'
+        },
+        activeUsers: {
+          name: 'Active Users',
+          value: 0,
+          health: 'healthy'
+        },
+        totalIdentities: {
+          name: 'Total Identities',
+          value: 0,
+          health: 'healthy'
+        },
+        verifiedIdentities: {
+          name: 'Verified Identities',
+          value: 0,
+          health: 'healthy'
+        },
+        totalMessages: {
+          name: 'Total Messages',
+          value: 0,
+          health: 'healthy'
+        },
+        securityEvents: {
+          name: 'Security Events',
+          value: 0,
+          health: 'healthy'
+        },
+        systemHealth: {
+          name: 'System Health',
+          value: 'HEALTHY',
+          health: 'healthy'
+        }
       }
     }
   }

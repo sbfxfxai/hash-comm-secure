@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { decentralizedStorage } from '@/lib/p2p/decentralized-storage'
 import CryptoJS from 'crypto-js'
 
 export interface PremiumIdentity {
@@ -65,7 +65,7 @@ export class PremiumIdentityService {
     return badges[identity.verification_level] || null
   }
 
-  // Create a new premium identity
+// Create a new premium identity
   static async createPremiumIdentity(params: {
     user_id: string
     name: string
@@ -80,34 +80,52 @@ export class PremiumIdentityService {
       params.passphrase
     ).toString()
 
-    const { data, error } = await supabase
-      .from('premium_identities')
-      .insert({
-        user_id: params.user_id,
-        name: params.name,
-        address: params.address,
-        public_key: params.public_key,
-        private_key_encrypted: encrypted_private_key,
-        is_verified: false,
-        verification_level: 'basic'
-      })
-      .select()
-      .single()
+    // Use decentralized storage to store identity
+    const identityData = JSON.stringify({
+      user_id: params.user_id,
+      name: params.name,
+      address: params.address,
+      public_key: params.public_key,
+      private_key_encrypted: encrypted_private_key,
+      is_verified: false,
+      verification_level: 'basic'
+    })
 
-    if (error) throw error
-    return data
+    const hash = await decentralizedStorage.storeData(identityData)
+    if (!hash) throw new Error('Failed to store identity on IPFS')
+
+    return {
+      id: hash,
+      user_id: params.user_id,
+      name: params.name,
+      address: params.address,
+      public_key: params.public_key,
+      private_key_encrypted: encrypted_private_key,
+      is_verified: false,
+      verification_level: 'basic',
+      verification_date: null,
+      domain: null,
+      business_name: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }
   }
 
-  // Get user's premium identities
+// Get user's premium identities
   static async getUserIdentities(user_id: string): Promise<PremiumIdentity[]> {
-    const { data, error } = await supabase
-      .from('premium_identities')
-      .select('*')
-      .eq('user_id', user_id)
-      .order('created_at', { ascending: false })
+    // Retrieve all identity hashes from decentralized storage and filter by user_id
+    const identitiesData = await decentralizedStorage.retrieveData()
 
-    if (error) throw error
-    return data || []
+    if (identitiesData) {
+      const identities: PremiumIdentity[] = identitiesData.map(identityHash => {
+        const identity = JSON.parse(identityHash)
+        return identity.user_id === user_id ? identity : null
+      }).filter(identity => identity !== null)
+
+      return identities
+    } else {
+      throw new Error('Failed to retrieve identities from decentralized storage')
+    }
   }
 
   // Sync identity to device

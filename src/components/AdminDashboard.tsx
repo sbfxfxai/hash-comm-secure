@@ -86,77 +86,171 @@ export function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Premium Identities</CardTitle>
-          <CardDescription>Manage all premium identities in the network.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Address</TableHead>
-                <TableHead>Verification</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {identities.map(identity => (
-                <TableRow key={identity.id}>
-                  <TableCell>{identity.name}</TableCell>
-                  <TableCell>{(identity.metadata as any)?.address || 'N/A'}</TableCell>
-                  <TableCell>
-                    <Badge variant={identity.is_verified ? "default" : "secondary"}>
-                      {identity.verification_method || 'unverified'}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="identities">
+        <TabsList>
+          <TabsTrigger value="identities">Premium Identities</TabsTrigger>
+          <TabsTrigger value="reports">Compliance Reports</TabsTrigger>
+          <TabsTrigger value="auditLogs">Audit Logs</TabsTrigger>
+          <TabsTrigger value="metrics">Dashboard Metrics</TabsTrigger>
+        </TabsList>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Compliance Reports</CardTitle>
-          <CardDescription>Generate and view compliance reports.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button 
-            onClick={() => AdminService.generateComplianceReport({ 
-              report_type: 'audit', 
-              generated_by: 'admin', 
-              date_range_start: '2023-01-01', 
-              date_range_end: '2023-12-31'
-            })}
-          >
-            Generate Audit Report
-          </Button>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Report Type</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Generated At</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {reports.map(report => (
-                <TableRow key={report.id}>
-                  <TableCell>{report.report_type}</TableCell>
-                  <TableCell>
-                    <Badge variant={report.status === 'complete' ? "default" : "secondary"}>
-                      {report.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{new Date(report.generated_at).toLocaleString()}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+        <TabsContent value="identities">
+          <Card>
+            <CardHeader>
+              <CardTitle>Premium Identities</CardTitle>
+              <CardDescription>Manage all premium identities in the network.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Address</TableHead>
+                    <TableHead>Verification</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {identities.map(identity => (
+                    <TableRow key={identity.id}>
+                      <TableCell>{identity.name}</TableCell>
+                      <TableCell>{(identity.metadata as any)?.address || 'N/A'}</TableCell>
+                      <TableCell>
+                        <Badge variant={identity.is_verified ? "default" : "secondary"}>
+                          {identity.verification_method || 'unverified'}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="reports">
+          <Card>
+            <CardHeader>
+              <CardTitle>Compliance Reports</CardTitle>
+              <CardDescription>Generate and view compliance reports.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                onClick={() => AdminService.generateComplianceReport({ 
+                  report_type: 'audit', 
+                  generated_by: 'admin', 
+                  date_range_start: '2023-01-01', 
+                  date_range_end: '2023-12-31'
+                })}
+              >
+                Generate Audit Report
+              </Button>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Report Type</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Generated At</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {reports.map(report => (
+                    <TableRow key={report.id}>
+                      <TableCell>{report.report_type}</TableCell>
+                      <TableCell>
+                        <Badge variant={report.status === 'complete' ? "default" : "secondary"}>
+                          {report.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{new Date(report.generated_at).toLocaleString()}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="auditLogs">
+          <Card>
+            <CardHeader>
+              <CardTitle>Audit Logs</CardTitle>
+              <CardDescription>View and filter audit logs to track user activity and changes.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center space-x-2">
+                <Input placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                <Button onClick={handleFilterAuditLogs}>Filter</Button>
+                <Button onClick={handleSearchIdentities}>Search</Button>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline"><CalendarIcon className="mr-2 h-4 w-4" /> Select Date Range</Button>
+                  </PopoverTrigger>
+                  <PopoverContent>
+                    <div className="flex items-center space-x-3">
+                      <Calendar 
+                        mode="single"
+                        selected={dateFrom}
+                        onSelect={setDateFrom}
+                        className="rounded-md border"
+                      />
+                      <Calendar 
+                        mode="single"
+                        selected={dateTo}
+                        onSelect={setDateTo}
+                        className="rounded-md border"
+                      />
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Action</TableHead>
+                    <TableHead>User</TableHead>
+                    <TableHead>Date</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {auditLogs.map(log => (
+                    <TableRow key={log.id}>
+                      <TableCell>{log.action}</TableCell>
+                      <TableCell>{log.user}</TableCell>
+                      <TableCell>{new Date(log.timestamp).toLocaleString()}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="metrics">
+          <Card>
+            <CardHeader>
+              <CardTitle>Dashboard Metrics</CardTitle>
+              <CardDescription>Real-time metrics and health indicators of the application.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {metrics ? (
+                <div className="grid grid-cols-2 gap-4">
+                  {Object.entries(metrics).map(([key, metric]) => (
+                    <div key={key} className="flex items-center space-x-2">
+                      {getHealthIcon(metric.health)}
+                      <div className="flex-1">
+                        <strong>{metric.name}:</strong>
+                        <span className={`ml-2 ${getHealthColor(metric.health)}`}>{metric.value}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div>Loading metrics...</div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

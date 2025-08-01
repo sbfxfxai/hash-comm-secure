@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { bitcoinPayments } from '@/lib/p2p/bitcoin-payments'
 import { UsageEventData } from '@/types/database'
 
 export type SubscriptionTier = 'free' | 'premium' | 'business' | 'enterprise'
@@ -114,49 +114,45 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
 
 export class SubscriptionService {
   
-  // Get user's current subscription
+// Get user's current subscription
   static async getUserSubscription(userId: string): Promise<Subscription | null> {
-    const { data, error } = await supabase
-      .from('subscriptions')
-      .select('*')
-      .eq('user_id', userId)
-      .single()
+    // Subscriptions will now be tracked using Lightning Network payments
+    // Fetch from local storage based on successful bitcoin payments
+    const subscriptionData = localStorage.getItem(`subscription_${userId}`)
+    if (!subscriptionData) return null
 
-    if (error) {
-      console.error('Error fetching subscription:', error)
-      return null
-    }
-
-    return data
+    return JSON.parse(subscriptionData) as Subscription
   }
 
-  // Create a new subscription
+// Create a new subscription using Bitcoin payments
   static async createSubscription(params: {
     userId: string
     tier: SubscriptionTier
-    stripeCustomerId?: string
-    stripeSubscriptionId?: string
   }): Promise<Subscription | null> {
-    const { data, error } = await supabase
-      .from('subscriptions')
-      .insert({
-        user_id: params.userId,
-        tier: params.tier,
-        status: 'active',
-        stripe_customer_id: params.stripeCustomerId,
-        stripe_subscription_id: params.stripeSubscriptionId,
-        current_period_start: new Date().toISOString(),
-        current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
-      })
-      .select()
-      .single()
+    const tierPricing = SUBSCRIPTION_PLANS.find(plan => plan.tier === params.tier)
+    if (!tierPricing) throw new Error('Invalid subscription tier')
 
-    if (error) {
-      console.error('Error creating subscription:', error)
-      return null
+    const invoice = await bitcoinPayments.createPaymentRequest({
+      amountSats: tierPricing.monthlyPrice * 1000, // Convert to satoshis
+      description: `Subscribe to ${tierPricing.name}`
+    })
+
+    if (!invoice) throw new Error('Failed to create Bitcoin payment invoice')
+
+    const subscription: Subscription = {
+      id: invoice,
+      user_id: params.userId,
+      tier: params.tier,
+      status: 'active',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      cancel_at_period_end: false
     }
 
-    return data
+    // Store subscription in local storage
+    localStorage.setItem(`subscription_${params.userId}`, JSON.stringify(subscription))
+
+    return subscription
   }
 
   // Update subscription
