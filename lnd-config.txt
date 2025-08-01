@@ -1,0 +1,24 @@
+[LND Configuration for Sakage LLC - BitComm Project]
+Date: 2025-08-01
+Purpose: Lightning Network integration for reusable Lightning address (admin@sakage.online)
+
+LND Address (GRPC): node123.albyhub.com:10009
+Admin Macaroon (Hex): 0201036c6e642d61646d696e2d6d616361726f6f6e2e2e2e
+TLS Certificate (Hex): 308201223082011b020100300d06092a864886f70d0101050500302e2e2e
+
+Security Notes:
+- Keep this file secure and backed up
+- Do not share the macaroon publicly
+- TLS certificate ensures encrypted communication
+
+Next Steps:
+1. Connect Electrum to this LND node via Tools > Network > Lightning
+2. Open Lightning channel with sufficient liquidity (e.g., 1M sats)
+3. Generate Lightning address in Alby (admin@sakage.online)
+4. Integrate address into self-checkout system
+5. Test with small payment (1000 sats)
+
+Business Integration:
+- Use in App.jsx for Sakage LLC self-checkout
+- Display: "Send $[total] to admin@sakage.online"
+- Replaces expiring 1-day invoices with permanent address
