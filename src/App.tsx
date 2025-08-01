@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DomainSelector } from "@/components/DomainSelector";
 
 // Lazy load pages and heavy components
 const Index = lazy(() => import("./pages/Index"));
@@ -42,6 +43,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <DomainSelector />
       <BrowserRouter>
         <Suspense fallback={<PageSkeleton />}>
           <Routes>
