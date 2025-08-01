@@ -5,10 +5,6 @@
     "outputDirectory": "dist",
     "framework": "vite"
   },
-  "domains": [
-    "bitcomm.email",
-    "bitcomm.eth"
-  ],
   "redirects": [
     {
       "source": "/eth",
