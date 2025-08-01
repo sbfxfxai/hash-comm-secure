@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          id: string
+          user_id: string | null
+          action: string
+          resource_type: string
+          resource_id: string | null
+          changes: Json | null
+          ip_address: string | null
+          user_agent: string | null
+          timestamp: string
+          severity: string | null
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          action: string
+          resource_type: string
+          resource_id?: string | null
+          changes?: Json | null
+          ip_address?: string | null
+          user_agent?: string | null
+          timestamp?: string
+          severity?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          action?: string
+          resource_type?: string
+          resource_id?: string | null
+          changes?: Json | null
+          ip_address?: string | null
+          user_agent?: string | null
+          timestamp?: string
+          severity?: string | null
+        }
+        Relationships: []
+      }
       compliance_reports: {
         Row: {
           data: Json | null
@@ -83,6 +122,99 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
           verification_method?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          user_id: string
+          role: string
+          assigned_by: string | null
+          assigned_at: string
+          expires_at: string | null
+          is_active: boolean | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          role: string
+          assigned_by?: string | null
+          assigned_at?: string
+          expires_at?: string | null
+          is_active?: boolean | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          role?: string
+          assigned_by?: string | null
+          assigned_at?: string
+          expires_at?: string | null
+          is_active?: boolean | null
+        }
+        Relationships: []
+      }
+      user_permissions: {
+        Row: {
+          id: string
+          user_id: string
+          permission: string
+          resource_type: string | null
+          resource_id: string | null
+          granted_by: string | null
+          granted_at: string
+          expires_at: string | null
+          is_active: boolean | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          permission: string
+          resource_type?: string | null
+          resource_id?: string | null
+          granted_by?: string | null
+          granted_at?: string
+          expires_at?: string | null
+          is_active?: boolean | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          permission?: string
+          resource_type?: string | null
+          resource_id?: string | null
+          granted_by?: string | null
+          granted_at?: string
+          expires_at?: string | null
+          is_active?: boolean | null
+        }
+        Relationships: []
+      }
+      usage_metrics: {
+        Row: {
+          id: string
+          user_id: string | null
+          metric_type: string
+          metric_value: number
+          metadata: Json | null
+          timestamp: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          metric_type: string
+          metric_value: number
+          metadata?: Json | null
+          timestamp?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          metric_type?: string
+          metric_value?: number
+          metadata?: Json | null
+          timestamp?: string
         }
         Relationships: []
       }

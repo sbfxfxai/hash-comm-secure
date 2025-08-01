@@ -1,29 +1,88 @@
 import { useState, useEffect } from 'react'
-import { AdminService, PremiumIdentity, ComplianceReport } from '@/lib/adminService'
+import { AdminService, PremiumIdentity, ComplianceReport, AuditLog, DashboardMetrics, AuditLogFilter } from '@/lib/adminService'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { CalendarIcon, Users, Shield, Activity, AlertTriangle, CheckCircle, XCircle } from 'lucide-react'
+import { format } from 'date-fns'
 
 export function AdminDashboard() {
   const [identities, setIdentities] = useState<PremiumIdentity[]>([])
   const [reports, setReports] = useState<ComplianceReport[]>([])
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([])
+  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null)
   const [loading, setLoading] = useState(true)
+  const [auditFilter, setAuditFilter] = useState<AuditLogFilter>({})
+  const [searchTerm, setSearchTerm] = useState('')
+  const [dateFrom, setDateFrom] = useState<Date | undefined>()
+  const [dateTo, setDateTo] = useState<Date | undefined>()
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true)
-      const [identitiesData, reportsData] = await Promise.all([
-        AdminService.getAllIdentities(),
-        AdminService.getComplianceReports()
-      ])
-      setIdentities(identitiesData)
-      setReports(reportsData)
-      setLoading(false)
+      try {
+        const [identitiesData, reportsData, auditLogsData, metricsData] = await Promise.all([
+          AdminService.getAllIdentities(),
+          AdminService.getComplianceReports(),
+          AdminService.getAuditLogs(),
+          AdminService.getDashboardMetrics()
+        ])
+        setIdentities(identitiesData)
+        setReports(reportsData)
+        setAuditLogs(auditLogsData)
+        setMetrics(metricsData)
+      } catch (error) {
+        console.error('Error fetching admin data:', error)
+      } finally {
+        setLoading(false)
+      }
     }
     fetchData()
   }, [])
+
+  const handleSearchIdentities = async () => {
+    if (searchTerm.trim()) {
+      const results = await AdminService.searchIdentities(searchTerm)
+      setIdentities(results)
+    } else {
+      const allIdentities = await AdminService.getAllIdentities()
+      setIdentities(allIdentities)
+    }
+  }
+
+  const handleFilterAuditLogs = async () => {
+    const filter: AuditLogFilter = {
+      ...auditFilter,
+      dateFrom: dateFrom?.toISOString(),
+      dateTo: dateTo?.toISOString()
+    }
+    const filteredLogs = await AdminService.getAuditLogs(filter)
+    setAuditLogs(filteredLogs)
+  }
+
+  const getHealthColor = (health: string) => {
+    switch (health) {
+      case 'healthy': return 'text-green-600'
+      case 'warning': return 'text-yellow-600'
+      case 'critical': return 'text-red-600'
+      default: return 'text-gray-600'
+    }
+  }
+
+  const getHealthIcon = (health: string) => {
+    switch (health) {
+      case 'healthy': return <CheckCircle className="h-5 w-5 text-green-600" />
+      case 'warning': return <AlertTriangle className="h-5 w-5 text-yellow-600" />
+      case 'critical': return <XCircle className="h-5 w-5 text-red-600" />
+      default: return <Activity className="h-5 w-5 text-gray-600" />
+    }
+  }
 
   return (
     <div className="space-y-6">
