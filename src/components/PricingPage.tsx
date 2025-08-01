@@ -2,6 +2,7 @@ import React from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { BitCommButton } from '@/components/ui/bitcomm-button'
 import { SUBSCRIPTION_PLANS, SubscriptionPlan } from '@/lib/subscriptionService'
+import { BitcoinConnectButton, PaymentButton } from '@/components/BitcoinConnectComponents'
 import { Check, Star, Zap } from 'lucide-react'
 
 interface PricingCardProps {
@@ -33,13 +34,18 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, onSubscribe }) => (
           </li>
         ))}
       </ul>
-      <BitCommButton 
-        onClick={() => onSubscribe(plan.tier)}
-        className="w-full"
-        variant={plan.popular ? 'hero' : 'default'}
-      >
-        {plan.tier === 'basic' ? 'Get Started' : 'Upgrade to ' + plan.name}
-      </BitCommButton>
+      <div className="mt-4 space-y-2">
+        <BitcoinConnectButton 
+          variant={plan.popular ? 'hero' : 'default'}
+          className="w-full"
+        />
+        <PaymentButton
+          amount={plan.price_sats}
+          description={`${plan.name} Subscription`}
+          onPaymentSuccess={() => onSubscribe(plan.tier)}
+          className="w-full"
+        />
+      </div>
     </CardContent>
   </Card>
 )
