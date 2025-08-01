@@ -43,18 +43,14 @@ export const P2PPaymentCard: React.FC<P2PPaymentProps> = ({
 
     setIsProcessing(true)
     try {
-      // Initialize sender connection first
+      // Initialize sender connection
       const senderConnected = await lightningTools.initializeUserConnection(user.did)
       if (!senderConnected) {
         throw new Error('Failed to connect your Lightning wallet')
       }
 
-      // For testing: Initialize recipient connection with a test Lightning address
-      // In production, recipient would have their own wallet
-      const recipientConnected = await lightningTools.initializeUserConnection(
-        recipientDID, 
-        'excitementresourceful193152@getalby.com' // Test recipient address
-      )
+      // Initialize recipient connection
+      const recipientConnected = await lightningTools.initializeUserConnection(recipientDID)
       if (!recipientConnected) {
         throw new Error('Failed to connect to recipient Lightning address')
       }

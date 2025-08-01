@@ -6,9 +6,11 @@ import { BitCommButton } from '@/components/ui/bitcomm-button';
 import { Wifi, WifiOff, Users, Activity, Radio } from 'lucide-react';
 import { webrtcP2P as bitcommP2P, MessageEnvelope } from '@/lib/p2p/webrtc-p2p';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const P2PNetworkStatus = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isConnected, setIsConnected] = useState(false);
   const [networkStats, setNetworkStats] = useState({
     peerId: 'Not connected',
@@ -36,9 +38,10 @@ export const P2PNetworkStatus = () => {
   const initializeP2P = async () => {
     setIsInitializing(true);
     try {
-      // Generate a demo BitComm address for testing
-      const demoAddress = 'bc1test' + Math.random().toString(36).substring(2, 8);
-      await bitcommP2P.initialize(demoAddress);
+      // Initialize P2P network with user's DID
+      if (user?.did) {
+        await bitcommP2P.initialize(user.did);
+      }
       bitcommP2P.addMessageHandler(handleReceivedMessage);
       updateNetworkStats();
       

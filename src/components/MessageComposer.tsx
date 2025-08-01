@@ -244,24 +244,6 @@ console.error('Message send failed. Error details:', error);
           
           
           <CardContent className="space-y-6">
-            {/* Lightning Payment Test Section */}
-            <div className="mb-6 p-4 bg-gradient-to-r from-bitcoin-orange/5 to-primary/5 rounded-lg border border-bitcoin-orange/20">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Zap className="h-5 w-5 text-bitcoin-orange" />
-                Test Real Lightning Payment (25¢)
-              </h3>
-              <PaywallCard
-                feature="Premium Message Priority"
-                amount={625} 
-                description="Pay 25 cents to test developer revenue distribution to excitementresourceful193152@getalby.com"
-                onPaymentSuccess={() => {
-                  toast({
-                    title: "Payment Successful!",
-                    description: "Developer received 10% revenue share automatically",
-                  });
-                }}
-              />
-            </div>
             {/* Recipient Section - Mobile Optimized */}
             <div className="space-y-3">
               <Label htmlFor="recipient" className="text-sm font-medium">Recipient Address</Label>

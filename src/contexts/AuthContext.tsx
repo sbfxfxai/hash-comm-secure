@@ -93,7 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error('Invalid DID')
       }
       
-      // For demo purposes, create a basic user from DID
+      // Create user from DID
       const didUser: DIDUser = {
         did,
         publicKey: 'verified',
