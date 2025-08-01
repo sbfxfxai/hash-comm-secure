@@ -187,7 +187,7 @@ console.error('Error loading identities from localStorage:', error);
     return (
       <Badge className={`${badge.color} bg-opacity-10`}>
         <Icon className="h-4 w-4 mr-1" />
-        {badge.label}
+        {badge.text}
       </Badge>
     );
   };
@@ -266,7 +266,7 @@ console.error('Error loading identities from localStorage:', error);
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="font-bold">{identity.name}</h3>
-                    <p className="text-sm text-muted-foreground">{formatAddress(identity.address)}</p>
+                    <p className="text-sm text-muted-foreground">{formatAddress(identity.metadata?.address || '')}</p>
                   </div>
                   {renderVerificationBadge(identity)}
                 </div>

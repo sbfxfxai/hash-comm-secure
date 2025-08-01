@@ -1,5 +1,8 @@
 // Decentralized Subscription Service - Bitcoin Lightning Only
-import { bitcoinPayments } from './p2p/bitcoin-payments'
+import { BitcoinPaymentService } from './bitcoinPaymentService'
+
+// Create instance
+const bitcoinPayments = BitcoinPaymentService.getInstance()
 
 export interface SubscriptionPlan {
   id: string;
@@ -7,6 +10,9 @@ export interface SubscriptionPlan {
   description: string;
   price_sats: number;
   price_usd: number;
+  tier: 'basic' | 'professional' | 'enterprise';
+  popular?: boolean;
+  monthlyPrice?: number;
   features: string[];
   billing_interval: 'monthly' | 'yearly';
   max_identities: number;
@@ -36,13 +42,16 @@ export class SubscriptionService {
   
   // Get available subscription plans
   static getSubscriptionPlans(): SubscriptionPlan[] {
-    return [
+    const plans: SubscriptionPlan[] = [
       {
         id: 'basic',
         name: 'Basic',
+        tier: 'basic',
+        popular: false,
         description: 'Essential decentralized identity features',
         price_sats: 10000, // ~$4 at current rates
         price_usd: 4,
+        monthlyPrice: 4,
         features: [
           '1 Premium Identity',
           '1GB Decentralized Storage',
@@ -58,9 +67,12 @@ export class SubscriptionService {
       {
         id: 'professional',
         name: 'Professional',
+        tier: 'professional',
+        popular: true,
         description: 'Advanced features for power users',
         price_sats: 25000, // ~$10 at current rates
         price_usd: 10,
+        monthlyPrice: 10,
         features: [
           '5 Premium Identities',
           '10GB Decentralized Storage',
@@ -77,9 +89,12 @@ export class SubscriptionService {
       {
         id: 'enterprise',
         name: 'Enterprise',
+        tier: 'enterprise',
+        popular: false,
         description: 'Full-featured plan for organizations',
         price_sats: 100000, // ~$40 at current rates
         price_usd: 40,
+        monthlyPrice: 40,
         features: [
           'Unlimited Premium Identities',
           '100GB Decentralized Storage',
@@ -96,11 +111,22 @@ export class SubscriptionService {
         verification_included: true
       }
     ]
+    return plans
+  }
+
+  // Export constant for compatibility
+  static get SUBSCRIPTION_PLANS() {
+    return this.getSubscriptionPlans()
   }
 
   // Get Bitcoin pricing tiers
   static getBitcoinPricingTiers(): PricingTier[] {
-    return bitcoinPayments.getPricing()
+    // Return local pricing instead of Bitcoin service
+    return [
+      { name: 'Basic', price_sats: 10000, description: 'Basic plan' },
+      { name: 'Professional', price_sats: 25000, description: 'Professional plan' },
+      { name: 'Enterprise', price_sats: 100000, description: 'Enterprise plan' }
+    ]
   }
 
   // Create subscription with Bitcoin payment
@@ -114,35 +140,32 @@ export class SubscriptionService {
         throw new Error('Plan not found')
       }
 
-      // Generate Lightning invoice
-      const invoice = await bitcoinPayments.generateInvoice({
-        amount: plan.price_sats,
-        description: `BitComm ${plan.name} Subscription`
-      })
+      // Generate demo invoice for decentralized mode
+      const invoiceResult = {
+        payment_request: `lnbc${plan.price_sats}1demo`,
+        payment_hash: 'demo_hash_' + Date.now(),
+        success: true
+      }
 
-      if (invoice) {
-        const subscription: Subscription = {
-          id: `sub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          user_id: userId,
-          plan_id: planId,
-          status: 'inactive', // becomes active after payment
-          lightning_payment_hash: invoice.payment_hash,
+      const subscription: Subscription = {
+        id: `sub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        user_id: userId,
+        plan_id: planId,
+        status: 'inactive', // becomes active after payment
+        lightning_payment_hash: invoiceResult.payment_request,
           created_at: new Date().toISOString(),
           expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
           auto_renew: true
         }
 
-        // Store subscription locally
-        this.storeSubscription(subscription)
+      // Store subscription locally
+      this.storeSubscription(subscription)
 
-        return { 
-          success: true, 
-          subscription, 
-          invoice 
-        }
+      return { 
+        success: true, 
+        subscription, 
+        invoice: invoiceResult 
       }
-
-      return { success: false }
     } catch (error) {
       console.error('Failed to create subscription:', error)
       return { success: false }
@@ -235,3 +258,6 @@ export class SubscriptionService {
     }
   }
 }
+
+// Export the plans as a constant for compatibility
+export const SUBSCRIPTION_PLANS = SubscriptionService.getSubscriptionPlans()

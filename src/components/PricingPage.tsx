@@ -38,7 +38,7 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, onSubscribe }) => (
         className="w-full"
         variant={plan.popular ? 'hero' : 'default'}
       >
-        {plan.tier === 'free' ? 'Get Started' : 'Upgrade to ' + plan.name}
+        {plan.tier === 'basic' ? 'Get Started' : 'Upgrade to ' + plan.name}
       </BitCommButton>
     </CardContent>
   </Card>

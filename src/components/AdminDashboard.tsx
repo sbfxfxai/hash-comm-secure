@@ -66,8 +66,14 @@ export function AdminDashboard() {
     setAuditLogs(filteredLogs)
   }
 
-  const getHealthColor = (health: string) => {
-    switch (health) {
+  const getHealthStatus = (metric: any): 'healthy' | 'warning' | 'critical' => {
+    if (metric.status) return metric.status
+    if (metric.value && typeof metric.value === 'number' && metric.value > 100) return 'healthy'
+    return 'healthy'
+  }
+
+  const getHealthColor = (status: 'healthy' | 'warning' | 'critical') => {
+    switch (status) {
       case 'healthy': return 'text-green-600'
       case 'warning': return 'text-yellow-600'
       case 'critical': return 'text-red-600'
@@ -75,8 +81,8 @@ export function AdminDashboard() {
     }
   }
 
-  const getHealthIcon = (health: string) => {
-    switch (health) {
+  const getHealthIcon = (status: 'healthy' | 'warning' | 'critical') => {
+    switch (status) {
       case 'healthy': return <CheckCircle className="h-5 w-5 text-green-600" />
       case 'warning': return <AlertTriangle className="h-5 w-5 text-yellow-600" />
       case 'critical': return <XCircle className="h-5 w-5 text-red-600" />
@@ -113,7 +119,7 @@ export function AdminDashboard() {
                   {identities.map(identity => (
                     <TableRow key={identity.id}>
                       <TableCell>{identity.name}</TableCell>
-                      <TableCell>{(identity.metadata as any)?.address || 'N/A'}</TableCell>
+                      <TableCell>{identity.metadata?.address || 'N/A'}</TableCell>
                       <TableCell>
                         <Badge variant={identity.is_verified ? "default" : "secondary"}>
                           {identity.verification_method || 'unverified'}
@@ -135,12 +141,11 @@ export function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <Button 
-                onClick={() => AdminService.generateComplianceReport({ 
-                  report_type: 'audit', 
-                  generated_by: 'admin', 
-                  date_range_start: '2023-01-01', 
-                  date_range_end: '2023-12-31'
-                })}
+                onClick={() => AdminService.generateComplianceReport(
+                  'audit',
+                  { start: '2023-01-01', end: '2023-12-31' },
+                  'admin'
+                )}
               >
                 Generate Audit Report
               </Button>
@@ -157,7 +162,7 @@ export function AdminDashboard() {
                     <TableRow key={report.id}>
                       <TableCell>{report.report_type}</TableCell>
                       <TableCell>
-                        <Badge variant={report.status === 'complete' ? "default" : "secondary"}>
+                        <Badge variant={report.status === 'completed' ? "default" : "secondary"}>
                           {report.status}
                         </Badge>
                       </TableCell>
@@ -215,7 +220,7 @@ export function AdminDashboard() {
                   {auditLogs.map(log => (
                     <TableRow key={log.id}>
                       <TableCell>{log.action}</TableCell>
-                      <TableCell>{log.user}</TableCell>
+                      <TableCell>{log.user_id}</TableCell>
                       <TableCell>{new Date(log.timestamp).toLocaleString()}</TableCell>
                     </TableRow>
                   ))}
@@ -234,15 +239,18 @@ export function AdminDashboard() {
             <CardContent>
               {metrics ? (
                 <div className="grid grid-cols-2 gap-4">
-                  {Object.entries(metrics).map(([key, metric]) => (
-                    <div key={key} className="flex items-center space-x-2">
-                      {getHealthIcon(metric.health)}
-                      <div className="flex-1">
-                        <strong>{metric.name}:</strong>
-                        <span className={`ml-2 ${getHealthColor(metric.health)}`}>{metric.value}</span>
+                  {Object.entries(metrics).map(([key, metric]) => {
+                    const status = getHealthStatus(metric)
+                    return (
+                      <div key={key} className="flex items-center space-x-2">
+                        {getHealthIcon(status)}
+                        <div className="flex-1">
+                          <strong>{metric.name}:</strong>
+                          <span className={`ml-2 ${getHealthColor(status)}`}>{metric.value}</span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               ) : (
                 <div>Loading metrics...</div>

@@ -1,7 +1,26 @@
 // Decentralized Admin Service - No Supabase dependencies
 import { type Database } from '@/integrations/supabase/types'
+import { PremiumIdentity } from '@/lib/premiumIdentity'
 
-// Mock types for the decentralized version
+// Export types that components expect
+export type { PremiumIdentity }
+export type ComplianceReport = {
+  id: string;
+  report_type: 'security' | 'audit' | 'activity' | 'compliance';
+  generated_by: string;
+  generated_at: string;
+  date_range_start: string;
+  date_range_end: string;
+  data: ComplianceReportData;
+  status: 'generating' | 'completed' | 'failed';
+  created_at: string;
+}
+
+export type ComplianceReportData = {
+  summary?: string;
+  findings?: any[];
+  recommendations?: string[];
+}
 export type Tables = Database['public']['Tables']
 export type AuditLog = {
   id: string;
@@ -63,6 +82,20 @@ export type DashboardMetrics = {
 
 // Decentralized Admin Service - uses local storage for demo
 export class AdminService {
+  // Get premium identities (alias for compatibility)
+  static async getAllIdentities(): Promise<PremiumIdentity[]> {
+    return this.getPremiumIdentities()
+  }
+
+  // Search identities
+  static async searchIdentities(query: string): Promise<PremiumIdentity[]> {
+    const allIdentities = await this.getPremiumIdentities()
+    return allIdentities.filter(identity => 
+      identity.name.toLowerCase().includes(query.toLowerCase()) ||
+      identity.metadata.address?.toLowerCase().includes(query.toLowerCase())
+    )
+  }
+
   // Get premium identities
   static async getPremiumIdentities(): Promise<any[]> {
     // Return demo data for decentralized mode
@@ -99,17 +132,21 @@ export class AdminService {
     ]
   }
 
-  // Generate compliance report
-  static async generateComplianceReport(reportType: string, dateRange: { start: string; end: string }): Promise<any> {
+  // Generate compliance report (updated signature)
+  static async generateComplianceReport(
+    reportType: string, 
+    dateRange: { start: string; end: string },
+    generatedBy: string = 'admin'
+  ): Promise<ComplianceReport> {
     return {
       id: Date.now().toString(),
-      report_type: reportType,
-      generated_by: 'admin',
+      report_type: reportType as 'security' | 'audit' | 'activity' | 'compliance',
+      generated_by: generatedBy,
       generated_at: new Date().toISOString(),
       date_range_start: dateRange.start,
       date_range_end: dateRange.end,
-      data: {},
-      status: 'completed',
+      data: { summary: 'Generated report', findings: [], recommendations: [] },
+      status: 'completed' as const,
       created_at: new Date().toISOString()
     }
   }

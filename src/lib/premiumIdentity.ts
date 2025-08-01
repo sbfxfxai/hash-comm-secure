@@ -15,6 +15,13 @@ export interface PremiumIdentity {
   metadata: IdentityMetadata;
 }
 
+export interface VerificationBadge {
+  level: 'basic' | 'verified' | 'premium';
+  text: string;
+  color: string;
+  icon?: string;
+}
+
 export interface IdentityMetadata {
   address?: string;
   phone?: string;
@@ -25,6 +32,24 @@ export interface IdentityMetadata {
 }
 
 export class PremiumIdentityService {
+  
+  // Get verification badge for identity
+  static getVerificationBadge(identity: PremiumIdentity): VerificationBadge | null {
+    if (identity.is_verified) {
+      return {
+        level: 'verified',
+        text: 'Verified',
+        color: 'green',
+        icon: 'check'
+      }
+    }
+    return {
+      level: 'basic',
+      text: 'Unverified',
+      color: 'gray',
+      icon: 'clock'
+    }
+  }
   
   // Create a new premium identity (stored on IPFS)
   static async createPremiumIdentity(params: {
