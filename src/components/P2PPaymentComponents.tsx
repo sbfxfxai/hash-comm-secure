@@ -43,6 +43,22 @@ export const P2PPaymentCard: React.FC<P2PPaymentProps> = ({
 
     setIsProcessing(true)
     try {
+      // Initialize sender connection first
+      const senderConnected = await lightningTools.initializeUserConnection(user.did)
+      if (!senderConnected) {
+        throw new Error('Failed to connect your Lightning wallet')
+      }
+
+      // For testing: Initialize recipient connection with a test Lightning address
+      // In production, recipient would have their own wallet
+      const recipientConnected = await lightningTools.initializeUserConnection(
+        recipientDID, 
+        'excitementresourceful193152@getalby.com' // Test recipient address
+      )
+      if (!recipientConnected) {
+        throw new Error('Failed to connect to recipient Lightning address')
+      }
+
       const result = await lightningTools.processP2PPayment({
         fromUserId: user.did, // Use DID instead of traditional userID
         toUserId: recipientDID, // Use recipient DID
@@ -161,11 +177,15 @@ export const PaywallCard: React.FC<PaywallCardProps> = ({
         onPaid: onPaymentSuccess
       })
 
-      // Launch Bitcoin Connect payment modal
-      await bitcoinConnect.launchPaymentModal(invoice, (response) => {
-        setPaymentResult({ success: true, preimage: response.preimage })
+      // Use Bitcoin Connect's launchPaymentModal with the created invoice
+      const result = await window.webln?.sendPayment(invoice)
+      
+      if (result?.preimage) {
+        setPaymentResult({ success: true, preimage: result.preimage })
         if (onPaymentSuccess) onPaymentSuccess()
-      })
+      } else {
+        throw new Error('Payment failed - no preimage received')
+      }
 
       // Wait for payment verification
       const verified = await verification
