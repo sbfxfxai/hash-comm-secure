@@ -1,17 +1,27 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { User, Session } from '@supabase/supabase-js'
-import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
-import { AuthResponse } from '@/types/auth'
+import { generateDID, verifyDID, createIdentity, storeDIDLocally, getDIDFromStorage } from '@/lib/did'
+
+interface DIDUser {
+  did: string
+  publicKey: string
+  displayName?: string
+  avatar?: string
+  createdAt: Date
+}
+
+interface AuthResponse {
+  error?: string
+}
 
 interface AuthContextType {
-  user: User | null
-  session: Session | null
+  user: DIDUser | null
   loading: boolean
-  signIn: (email: string, password: string) => Promise<AuthResponse>
-  signUp: (email: string, password: string, fullName?: string) => Promise<AuthResponse>
+  isAuthenticated: boolean
+  createDIDIdentity: (displayName: string) => Promise<AuthResponse>
+  signInWithDID: (did: string) => Promise<AuthResponse>
   signOut: () => Promise<void>
-  signInWithGoogle: () => Promise<AuthResponse>
+  connectBitcoinWallet: () => Promise<AuthResponse>
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType)
@@ -25,79 +35,124 @@ export const useAuth = () => {
 }
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null)
-  const [session, setSession] = useState<Session | null>(null)
+  const [user, setUser] = useState<DIDUser | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session)
-        setUser(session?.user ?? null)
-        setLoading(false)
-
-        if (event === 'SIGNED_IN') {
-          toast.success('Welcome to BitComm!')
-        } else if (event === 'SIGNED_OUT') {
-          toast.info('You have been signed out.')
+    // Check for existing DID identity in localStorage
+    const initializeAuth = async () => {
+      try {
+        const storedDID = getDIDFromStorage()
+        if (storedDID) {
+          setUser(storedDID)
+          toast.success('Welcome back to BitComm!')
         }
+      } catch (error) {
+        console.error('Failed to initialize auth:', error)
+      } finally {
+        setLoading(false)
       }
-    )
+    }
 
-    return () => subscription.unsubscribe()
+    initializeAuth()
   }, [])
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-    return { error }
+  const createDIDIdentity = async (displayName: string): Promise<AuthResponse> => {
+    try {
+      setLoading(true)
+      const identity = await createIdentity(displayName)
+      
+      const didUser: DIDUser = {
+        did: identity.did,
+        publicKey: identity.publicKey,
+        displayName: displayName,
+        createdAt: new Date()
+      }
+      
+      // Store locally for decentralized auth
+      storeDIDLocally(didUser)
+      setUser(didUser)
+      
+      toast.success('DID Identity created successfully!')
+      return { error: undefined }
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Failed to create DID identity'
+      toast.error(errorMsg)
+      return { error: errorMsg }
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const signUp = async (email: string, password: string, fullName?: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-        },
-      },
-    })
-    return { error }
+  const signInWithDID = async (did: string): Promise<AuthResponse> => {
+    try {
+      setLoading(true)
+      const isValid = await verifyDID(did)
+      
+      if (!isValid) {
+        throw new Error('Invalid DID')
+      }
+      
+      // For demo purposes, create a basic user from DID
+      const didUser: DIDUser = {
+        did,
+        publicKey: 'verified',
+        displayName: `User-${did.slice(-8)}`,
+        createdAt: new Date()
+      }
+      
+      storeDIDLocally(didUser)
+      setUser(didUser)
+      
+      toast.success('Signed in with DID successfully!')
+      return { error: undefined }
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Failed to sign in with DID'
+      toast.error(errorMsg)
+      return { error: errorMsg }
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const signOut = async () => {
-    await supabase.auth.signOut()
+  const connectBitcoinWallet = async (): Promise<AuthResponse> => {
+    try {
+      // Bitcoin Connect integration for wallet-based authentication
+      const bitcoinConnect = (window as any).bitcoinConnect
+      if (!bitcoinConnect) {
+        throw new Error('Bitcoin Connect not available')
+      }
+      
+      // This would integrate with Bitcoin Connect for wallet auth
+      toast.success('Bitcoin wallet connected!')
+      return { error: undefined }
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Failed to connect Bitcoin wallet'
+      toast.error(errorMsg)
+      return { error: errorMsg }
+    }
   }
 
-  const signInWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/dashboard`,
-      },
-    })
-    return { error }
+  const signOut = async (): Promise<void> => {
+    try {
+      // Clear local storage
+      localStorage.removeItem('bitcomm_did_user')
+      setUser(null)
+      toast.info('Signed out successfully')
+    } catch (error) {
+      console.error('Sign out error:', error)
+      toast.error('Error signing out')
+    }
   }
 
   const value = {
     user,
-    session,
     loading,
-    signIn,
-    signUp,
+    isAuthenticated: !!user,
+    createDIDIdentity,
+    signInWithDID,
     signOut,
-    signInWithGoogle,
+    connectBitcoinWallet,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

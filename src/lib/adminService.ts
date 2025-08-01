@@ -1,5 +1,4 @@
 // Decentralized Admin Service - No Supabase dependencies
-import { type Database } from '@/integrations/supabase/types'
 import { PremiumIdentity } from '@/lib/premiumIdentity'
 
 // Export types that components expect
@@ -21,7 +20,6 @@ export type ComplianceReportData = {
   findings?: any[];
   recommendations?: string[];
 }
-export type Tables = Database['public']['Tables']
 export type AuditLog = {
   id: string;
   user_id: string;

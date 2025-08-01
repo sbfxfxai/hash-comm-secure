@@ -26,7 +26,7 @@ export default defineConfig(({ mode }) => ({
           // Vendor chunk for large third-party libraries
           vendor: ['react', 'react-dom', 'react-router-dom'],
           // Crypto chunk for security-related libraries
-          crypto: ['crypto-js', '@supabase/supabase-js'],
+          crypto: ['crypto-js'],
           // P2P chunk for networking libraries
           p2p: ['libp2p', '@libp2p/webrtc', '@libp2p/kad-dht'],
           // UI chunk for UI components
