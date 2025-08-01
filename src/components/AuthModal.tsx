@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { BitCommButton } from '@/components/ui/bitcomm-button'
 import { useAuth } from '@/contexts/AuthContext'
 import { toast } from 'sonner'
-import { Mail, Lock, User, Chrome, LogIn, UserPlus } from 'lucide-react'
+import { Shield, Wallet, User, Bitcoin, LogIn, UserPlus, Key } from 'lucide-react'
 
 interface AuthModalProps {
   children: React.ReactNode
@@ -17,52 +17,50 @@ interface AuthModalProps {
 export const AuthModal: React.FC<AuthModalProps> = ({ children }) => {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [fullName, setFullName] = useState('')
-  const { signIn, signUp, signInWithGoogle } = useAuth()
+  const [displayName, setDisplayName] = useState('')
+  const [didInput, setDidInput] = useState('')
+  const { createDIDIdentity, signInWithDID, connectBitcoinWallet } = useAuth()
 
-  const handleSignIn = async (e: React.FormEvent) => {
+  const handleCreateDID = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
-    const { error } = await signIn(email, password)
+    const { error } = await createDIDIdentity(displayName)
     
     if (error) {
-      toast.error(error.message || 'Sign in failed')
+      toast.error(error || 'Failed to create DID identity')
     } else {
-      toast.success('Welcome back to BitComm!')
+      toast.success('DID Identity created successfully!')
       setOpen(false)
-      setEmail('')
-      setPassword('')
+      setDisplayName('')
     }
     setLoading(false)
   }
 
-  const handleSignUp = async (e: React.FormEvent) => {
+  const handleSignInWithDID = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
-    const { error } = await signUp(email, password, fullName)
+    const { error } = await signInWithDID(didInput)
     
     if (error) {
-      toast.error(error.message || 'Sign up failed')
+      toast.error(error || 'Failed to sign in with DID')
     } else {
-      toast.success('Account created! Please check your email to verify.')
+      toast.success('Signed in successfully!')
       setOpen(false)
-      setEmail('')
-      setPassword('')
-      setFullName('')
+      setDidInput('')
     }
     setLoading(false)
   }
 
-  const handleGoogleSignIn = async () => {
+  const handleBitcoinConnect = async () => {
     setLoading(true)
-    const { error } = await signInWithGoogle()
+    const { error } = await connectBitcoinWallet()
     
     if (error) {
-      toast.error(error.message || 'Google sign in failed')
+      toast.error(error || 'Failed to connect Bitcoin wallet')
+    } else {
+      setOpen(false)
     }
     setLoading(false)
   }
@@ -82,149 +80,41 @@ export const AuthModal: React.FC<AuthModalProps> = ({ children }) => {
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="signin" className="w-full">
+        <Tabs defaultValue="create" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="create">Create DID</TabsTrigger>
             <TabsTrigger value="signin">Sign In</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="signin">
+          <TabsContent value="create">
             <Card>
               <CardHeader className="text-center pb-4">
                 <CardTitle className="flex items-center justify-center gap-2">
-                  <LogIn className="h-5 w-5" />
-                  Welcome Back
+                  <Shield className="h-5 w-5" />
+                  Create DID Identity
                 </CardTitle>
                 <CardDescription>
-                  Sign in to access your BitComm account
+                  Create a decentralized identity for secure messaging
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleSignIn} className="space-y-4">
+                <form onSubmit={handleCreateDID} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signin-email">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="signin-email"
-                        type="email"
-                        placeholder="your@email.com"
-                        className="pl-10"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signin-password">Password</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="signin-password"
-                        type="password"
-                        placeholder="••••••••"
-                        className="pl-10"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-                  <BitCommButton
-                    type="submit"
-                    className="w-full"
-                    disabled={loading}
-                  >
-                    {loading ? "Signing in..." : "Sign In"}
-                  </BitCommButton>
-                </form>
-
-                <div className="mt-4">
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-background px-2 text-muted-foreground">
-                        Or continue with
-                      </span>
-                    </div>
-                  </div>
-                  <Button
-                    variant="outline"
-                    className="w-full mt-4"
-                    onClick={handleGoogleSignIn}
-                    disabled={loading}
-                  >
-                    <Chrome className="mr-2 h-4 w-4" />
-                    Google
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="signup">
-            <Card>
-              <CardHeader className="text-center pb-4">
-                <CardTitle className="flex items-center justify-center gap-2">
-                  <UserPlus className="h-5 w-5" />
-                  Create Account
-                </CardTitle>
-                <CardDescription>
-                  Join BitComm and start secure messaging
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSignUp} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-name">Full Name</Label>
+                    <Label htmlFor="display-name">Display Name</Label>
                     <div className="relative">
                       <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
-                        id="signup-name"
+                        id="display-name"
                         type="text"
-                        placeholder="John Doe"
+                        placeholder="Your display name"
                         className="pl-10"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
+                        value={displayName}
+                        onChange={(e) => setDisplayName(e.target.value)}
                         required
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="signup-email"
-                        type="email"
-                        placeholder="your@email.com"
-                        className="pl-10"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="signup-password"
-                        type="password"
-                        placeholder="••••••••"
-                        className="pl-10"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        minLength={6}
                       />
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Password must be at least 6 characters
+                      This will be your public identifier on BitComm
                     </p>
                   </div>
                   <BitCommButton
@@ -232,7 +122,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ children }) => {
                     className="w-full"
                     disabled={loading}
                   >
-                    {loading ? "Creating account..." : "Create Account"}
+                    {loading ? "Creating DID..." : "Create Decentralized Identity"}
                   </BitCommButton>
                 </form>
 
@@ -243,18 +133,83 @@ export const AuthModal: React.FC<AuthModalProps> = ({ children }) => {
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
                       <span className="bg-background px-2 text-muted-foreground">
-                        Or continue with
+                        Or connect with
                       </span>
                     </div>
                   </div>
                   <Button
                     variant="outline"
                     className="w-full mt-4"
-                    onClick={handleGoogleSignIn}
+                    onClick={handleBitcoinConnect}
                     disabled={loading}
                   >
-                    <Chrome className="mr-2 h-4 w-4" />
-                    Google
+                    <Bitcoin className="mr-2 h-4 w-4" />
+                    Bitcoin Wallet
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="signin">
+            <Card>
+              <CardHeader className="text-center pb-4">
+                <CardTitle className="flex items-center justify-center gap-2">
+                  <Key className="h-5 w-5" />
+                  Sign In with DID
+                </CardTitle>
+                <CardDescription>
+                  Enter your decentralized identity to sign in
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSignInWithDID} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="did-input">Your DID</Label>
+                    <div className="relative">
+                      <Shield className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="did-input"
+                        type="text"
+                        placeholder="did:btc:..."
+                        className="pl-10 font-mono text-sm"
+                        value={didInput}
+                        onChange={(e) => setDidInput(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Enter your Bitcoin-based decentralized identifier
+                    </p>
+                  </div>
+                  <BitCommButton
+                    type="submit"
+                    className="w-full"
+                    disabled={loading}
+                  >
+                    {loading ? "Signing in..." : "Sign In with DID"}
+                  </BitCommButton>
+                </form>
+
+                <div className="mt-4">
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">
+                        Or connect with
+                      </span>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="w-full mt-4"
+                    onClick={handleBitcoinConnect}
+                    disabled={loading}
+                  >
+                    <Wallet className="mr-2 h-4 w-4" />
+                    Bitcoin Wallet
                   </Button>
                 </div>
               </CardContent>
