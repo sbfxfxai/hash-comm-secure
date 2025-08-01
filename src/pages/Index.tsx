@@ -80,11 +80,12 @@ const Index = () => {
       {/* Main Content */}
       <section className="container mx-auto px-4 py-12">
         <Tabs defaultValue="network" className="w-full">
-          <TabsList className="grid w-full grid-cols-6 mb-8">
+          <TabsList className="grid w-full grid-cols-7 mb-8">
             <TabsTrigger value="network">P2P Network</TabsTrigger>
             <TabsTrigger value="composer">Message Composer</TabsTrigger>
             <TabsTrigger value="pow">Proof-of-Work Demo</TabsTrigger>
             <TabsTrigger value="identity">Identity Manager</TabsTrigger>
+            <TabsTrigger value="payments">Test Payments</TabsTrigger>
             <TabsTrigger value="enterprise">Enterprise</TabsTrigger>
             <TabsTrigger value="profile">Profile</TabsTrigger>
           </TabsList>
@@ -138,6 +139,18 @@ const Index = () => {
             </div>
             <Suspense fallback={<ComponentSkeleton />}>
               <IdentityManager />
+            </Suspense>
+          </TabsContent>
+
+          <TabsContent value="payments" className="space-y-6">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold mb-4">Test Lightning Payments</h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Test the revenue distribution system - 90% to features, 10% to developer.
+              </p>
+            </div>
+            <Suspense fallback={<ComponentSkeleton />}>
+              <PricingPage />
             </Suspense>
           </TabsContent>
 
