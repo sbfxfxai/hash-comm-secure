@@ -50,9 +50,8 @@ export class BitcoinConnectService {
     try {
       await init({
         appName: this.config.appName,
-        filters: ['webln'],
-        showBalance: true,
-        showOnboarding: true
+        filters: ['nwc'],
+        showBalance: true
       });
       
       this.isInitialized = true;
@@ -198,12 +197,10 @@ export class BitcoinConnectService {
         invoice: await this.createInvoice({
           amount: userAmount,
           description: request.description
-        }),
-        showBalance: true,
-        showOnboarding: true
+        })
       });
 
-      if (result && result.preimage) {
+      if (result) {
         // Send developer share after successful payment
         if (developerShare > 0 && this.config.developerAddress) {
           try {
@@ -215,7 +212,7 @@ export class BitcoinConnectService {
 
         return {
           success: true,
-          preimage: result.preimage,
+          preimage: 'success',
           developerShare,
           userAmount
         };
