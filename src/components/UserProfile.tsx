@@ -11,9 +11,9 @@ import { toast } from 'sonner'
 import { User, Mail, Calendar, Shield, Edit2, Save, X } from 'lucide-react'
 
 export const UserProfile: React.FC = () => {
-  const { user, session } = useAuth()
+  const { user } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
-  const [fullName, setFullName] = useState(user?.user_metadata?.full_name || '')
+  const [displayName, setDisplayName] = useState(user?.displayName || '')
   const [loading, setLoading] = useState(false)
 
   if (!user) {
@@ -71,32 +71,32 @@ export const UserProfile: React.FC = () => {
         <CardContent className="space-y-6">
           <div className="flex items-center space-x-4">
             <Avatar className="h-20 w-20">
-              <AvatarImage src={user.user_metadata?.avatar_url} alt={user.user_metadata?.full_name} />
+              <AvatarImage src={user.avatar} alt={user.displayName} />
               <AvatarFallback className="text-lg">
-                {user.user_metadata?.full_name?.[0] || user.email?.[0].toUpperCase()}
+                {user.displayName?.[0]?.toUpperCase() || 'U'}
               </AvatarFallback>
             </Avatar>
             <div className="space-y-2">
               <div>
                 {isEditing ? (
                   <div className="space-y-2">
-                    <Label htmlFor="fullName">Full Name</Label>
+                    <Label htmlFor="displayName">Display Name</Label>
                     <Input
-                      id="fullName"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      placeholder="Your full name"
+                      id="displayName"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      placeholder="Your display name"
                     />
                   </div>
                 ) : (
                   <h3 className="text-xl font-semibold">
-                    {user.user_metadata?.full_name || 'Anonymous User'}
+                    {user.displayName || 'Anonymous User'}
                   </h3>
                 )}
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
-                <Mail className="h-4 w-4" />
-                <span>{user.email}</span>
+                <Shield className="h-4 w-4" />
+                <span className="font-mono text-sm">{user.did}</span>
               </div>
             </div>
           </div>
@@ -114,16 +114,16 @@ export const UserProfile: React.FC = () => {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label className="text-sm font-medium">User ID</Label>
+              <Label className="text-sm font-medium">DID</Label>
               <code className="block p-2 bg-muted rounded text-xs break-all">
-                {user.id}
+                {user.did}
               </code>
             </div>
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Account Created</Label>
+              <Label className="text-sm font-medium">Identity Created</Label>
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">{formatDate(user.created_at)}</span>
+                <span className="text-sm">{formatDate(user.createdAt.toISOString())}</span>
               </div>
             </div>
           </div>
@@ -131,58 +131,27 @@ export const UserProfile: React.FC = () => {
           <Separator />
 
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Authentication Provider</Label>
-            <div className="flex items-center gap-2">
-              <Badge variant={user.app_metadata?.provider === 'google' ? 'default' : 'secondary'}>
-                {user.app_metadata?.provider || 'email'}
-              </Badge>
-              {user.email_confirmed_at && (
-                <Badge variant="outline" className="text-green-600 border-green-600">
-                  <Shield className="h-3 w-3 mr-1" />
-                  Verified
-                </Badge>
-              )}
-            </div>
+            <Label className="text-sm font-medium">Public Key</Label>
+            <code className="block p-2 bg-muted rounded text-xs break-all">
+              {user.publicKey}
+            </code>
           </div>
 
-          {user.last_sign_in_at && (
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Last Sign In</Label>
-              <span className="text-sm text-muted-foreground">
-                {formatDate(user.last_sign_in_at)}
-              </span>
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Authentication Method</Label>
+            <div className="flex items-center gap-2">
+              <Badge variant="default">
+                DID (Decentralized Identity)
+              </Badge>
+              <Badge variant="outline" className="text-green-600 border-green-600">
+                <Shield className="h-3 w-3 mr-1" />
+                Self-Sovereign
+              </Badge>
             </div>
-          )}
+          </div>
         </CardContent>
       </Card>
 
-      {/* Session Information */}
-      {session && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Current Session</CardTitle>
-            <CardDescription>
-              Information about your current BitComm session
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Session Started</Label>
-                <span className="text-sm text-muted-foreground">
-                  {formatDate(session.expires_at ? new Date(session.expires_at * 1000 - 3600000).toISOString() : '')}
-                </span>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Session Expires</Label>
-                <span className="text-sm text-muted-foreground">
-                  {session.expires_at && formatDate(new Date(session.expires_at * 1000).toISOString())}
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   )
 }

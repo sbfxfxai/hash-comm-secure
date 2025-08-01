@@ -32,7 +32,7 @@ const ComponentSkeleton = () => (
 );
 
 const Index = () => {
-  const { user, signOut, loading } = useAuth()
+  const { user, signOut, loading, isAuthenticated } = useAuth()
 
   return (
     <div className="min-h-screen bg-background">
@@ -49,8 +49,8 @@ const Index = () => {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.user_metadata.avatar_url} alt={user.user_metadata.full_name} />
-                    <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
+                    <AvatarImage src={user.avatar} alt={user.displayName} />
+                    <AvatarFallback>{user.displayName?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
