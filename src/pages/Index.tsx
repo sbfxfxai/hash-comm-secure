@@ -1,4 +1,4 @@
-import { Suspense, lazy, useState, useEffect } from 'react';
+import { Suspense, lazy, useState } from 'react';
 import { AuthModal } from '@/components/AuthModal';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Skeleton } from '@/components/ui/skeleton';
