@@ -42,6 +42,12 @@ const navigationItems = [
     description: "Your encrypted messages"
   },
   {
+    title: "Contacts",
+    value: "contacts",
+    icon: User,
+    description: "Manage your contacts"
+  },
+  {
     title: "P2P Network",
     value: "network",
     icon: Network,
