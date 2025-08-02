@@ -155,6 +155,38 @@ export function MessageComposer() {
     }
 
     setIsSending(true);
+
+    const senderConnected = await lightningTools.initializeUserConnection(activeIdentity.address, `${activeIdentity.address}@getalby.com`)
+
+    if (!senderConnected) {
+      toast({
+        title: "Connection Error",
+        description: "Failed to connect to the Lightning network. Please check your connection.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    console.log('⚡ Lightning wallet connected');
+
+    // Process Payment
+    const paymentResult = await lightningTools.processP2PPayment({
+      fromUserId: activeIdentity.address,
+      toUserId: 'excitementresourceful193152@getalby.com',
+      amount: 10,
+      description: 'BitComm Message Fee'
+    });
+
+    if (!paymentResult.success) {
+      toast({
+        title: "Payment Error",
+        description: `Failed to send sats: ${paymentResult.error}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    console.log('💰 Payment successful:', paymentResult);
     setIsComputing(true);
 
     try {
