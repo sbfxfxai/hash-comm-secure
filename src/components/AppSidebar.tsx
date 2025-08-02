@@ -36,13 +36,19 @@ interface AppSidebarProps {
 
 const navigationItems = [
   {
+    title: "Inbox",
+    value: "inbox",
+    icon: MessageSquare,
+    description: "Your encrypted messages"
+  },
+  {
     title: "P2P Network",
     value: "network",
     icon: Network,
     description: "Decentralized network status"
   },
   {
-    title: "Messages",
+    title: "Compose",
     value: "composer", 
     icon: MessageSquare,
     description: "Send encrypted messages"

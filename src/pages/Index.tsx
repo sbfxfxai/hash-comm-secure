@@ -6,6 +6,7 @@ import { AppSidebar } from '@/components/AppSidebar';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 
 // Lazy load heavy components
+const Inbox = lazy(() => import('@/components/Inbox').then(m => ({ default: m.Inbox })));
 const ProofOfWorkDemo = lazy(() => import('@/components/ProofOfWorkDemo').then(m => ({ default: m.ProofOfWorkDemo })));
 const IdentityManager = lazy(() => import('@/components/IdentityManager').then(m => ({ default: m.IdentityManager })));
 const MessageComposer = lazy(() => import('@/components/MessageComposer').then(m => ({ default: m.MessageComposer })));
@@ -36,7 +37,7 @@ const ComponentSkeleton = () => (
 
 const Index = () => {
   const { user, signOut, loading, isAuthenticated } = useAuth()
-  const [activeTab, setActiveTab] = useState("network")
+  const [activeTab, setActiveTab] = useState("inbox")
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab)
@@ -98,9 +99,10 @@ const Index = () => {
             {/* Desktop tabs - hidden on mobile */}
             <div className="hidden md:block mb-8">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-7">
+                <TabsList className="grid w-full grid-cols-8">
+                  <TabsTrigger value="inbox">Inbox</TabsTrigger>
                   <TabsTrigger value="network">P2P Network</TabsTrigger>
-                  <TabsTrigger value="composer">Messages</TabsTrigger>
+                  <TabsTrigger value="composer">Compose</TabsTrigger>
                   <TabsTrigger value="pow">Proof-of-Work</TabsTrigger>
                   <TabsTrigger value="identity">Identity</TabsTrigger>
                   <TabsTrigger value="lightning">Payments</TabsTrigger>
@@ -111,6 +113,16 @@ const Index = () => {
             </div>
             
             {/* Tab Content */}
+            {activeTab === "inbox" && (
+              <div className="h-[calc(100vh-140px)]">
+                <ProtectedRoute>
+                  <Suspense fallback={<ComponentSkeleton />}>
+                    <Inbox />
+                  </Suspense>
+                </ProtectedRoute>
+              </div>
+            )}
+            
             {activeTab === "network" && (
               <div className="space-y-6">
                 <div className="text-center mb-8">
