@@ -1,6 +1,7 @@
-// Bitcoin Connect React Components for BitComm
+// Bitcoin Connect React Components for BitComm - Enhanced with NWC
 import React, { useEffect, useState } from 'react'
 import { bitcoinConnect } from '@/lib/bitcoinConnectService'
+import { NWCConnectionModal } from '@/components/wallet/NWCConnectionModal'
 import { Button } from '@/components/ui/button'
 import { BitCommButton } from '@/components/ui/bitcomm-button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -23,6 +24,7 @@ export const BitcoinConnectButton: React.FC<BitcoinConnectButtonProps> = ({
   const [isConnected, setIsConnected] = useState(false)
   const [isConnecting, setIsConnecting] = useState(false)
   const [walletInfo, setWalletInfo] = useState<any>(null)
+  const [showModal, setShowModal] = useState(false)
 
   useEffect(() => {
     // Initialize Bitcoin Connect
@@ -32,27 +34,16 @@ export const BitcoinConnectButton: React.FC<BitcoinConnectButtonProps> = ({
     setIsConnected(bitcoinConnect.isConnected())
   }, [])
 
-  const handleConnect = async () => {
-    setIsConnecting(true)
-    try {
-      await bitcoinConnect.launchConnectionModal()
-      
-      // Check if connected after modal interaction
-      setTimeout(async () => {
-        const connected = bitcoinConnect.isConnected()
-        setIsConnected(connected)
-        
-        if (connected) {
-          const info = await bitcoinConnect.getWalletInfo()
-          setWalletInfo(info)
-          if (onConnect) onConnect(info)
-        }
-        setIsConnecting(false)
-      }, 1000)
-    } catch (error) {
-      console.error('Connection failed:', error)
-      setIsConnecting(false)
-    }
+  const handleConnect = () => {
+    setShowModal(true)
+  }
+
+  const handleConnectionComplete = async (connection: any) => {
+    setIsConnected(true)
+    const info = await bitcoinConnect.getWalletInfo()
+    setWalletInfo(info)
+    if (onConnect) onConnect(info)
+    setShowModal(false)
   }
 
   const handleDisconnect = async () => {
@@ -82,24 +73,32 @@ export const BitcoinConnectButton: React.FC<BitcoinConnectButtonProps> = ({
   }
 
   return (
-    <BitCommButton
-      onClick={handleConnect}
-      disabled={isConnecting}
-      variant={variant}
-      className={className}
-    >
-      {isConnecting ? (
-        <>
-          <Zap className="h-4 w-4 mr-2 animate-pulse" />
-          Connecting...
-        </>
-      ) : (
-        <>
-          <Wallet className="h-4 w-4 mr-2" />
-          Connect Lightning Wallet
-        </>
-      )}
-    </BitCommButton>
+    <>
+      <BitCommButton
+        onClick={handleConnect}
+        disabled={isConnecting}
+        variant={variant}
+        className={className}
+      >
+        {isConnecting ? (
+          <>
+            <Zap className="h-4 w-4 mr-2 animate-pulse" />
+            Connecting...
+          </>
+        ) : (
+          <>
+            <Wallet className="h-4 w-4 mr-2" />
+            Connect Lightning Wallet
+          </>
+        )}
+      </BitCommButton>
+
+      <NWCConnectionModal
+        open={showModal}
+        onOpenChange={setShowModal}
+        onConnectionComplete={handleConnectionComplete}
+      />
+    </>
   )
 }
 

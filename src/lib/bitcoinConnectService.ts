@@ -1,5 +1,5 @@
-// Bitcoin Connect Service for BitComm - Enhanced with Lightning Tools
-// Integrates Lightning wallet connectivity with WebLN and js-lightning-tools
+// Bitcoin Connect Service for BitComm - Enhanced with modern NWC patterns
+// Implements 1-click wallet connections with HTTP + Nostr flows
 import {
   init,
   launchModal,
@@ -11,6 +11,8 @@ import {
   disconnect
 } from '@getalby/bitcoin-connect'
 import { LightningAddress, fiat } from '@getalby/lightning-tools'
+import { nwcConnectionManager, type WalletConnection } from './nwc/connection-manager'
+import { clientSecretManager } from './nwc/client-secret'
 
 export interface BitcoinConnectConfig {
   appName: string
@@ -35,6 +37,7 @@ class BitcoinConnectService {
   private isInitialized = false
   private config: BitcoinConnectConfig
   private currentProvider: any = null
+  private nwcConnection: WalletConnection | null = null
 
   constructor() {
     this.config = {
@@ -44,15 +47,19 @@ class BitcoinConnectService {
     }
   }
 
-  // Initialize Bitcoin Connect
+  // Initialize Bitcoin Connect with modern NWC support
   async initialize(): Promise<void> {
     if (this.isInitialized) return
 
     try {
+      // Initialize NWC connection manager
+      await nwcConnectionManager.initialize()
+      
+      // Initialize Bitcoin Connect with NWC focus
       init({
         appName: this.config.appName,
         showBalance: true,
-        // filters: ['nwc'], // Focus on NWC connections
+        filters: ['nwc'], // Focus on NWC connections for modern flow
       })
 
       // Set up connection events
@@ -68,6 +75,7 @@ class BitcoinConnectService {
 
       onDisconnected(() => {
         this.currentProvider = null
+        this.nwcConnection = null
         console.log('🔌 Bitcoin wallet disconnected')
         
         // Clear global WebLN
@@ -76,23 +84,33 @@ class BitcoinConnectService {
         }
       })
 
+      // Load existing NWC connection
+      this.nwcConnection = nwcConnectionManager.getActiveConnection()
+
       this.isInitialized = true
-      console.log('🚀 Bitcoin Connect initialized for BitComm')
+      console.log('🚀 Bitcoin Connect initialized with modern NWC support')
     } catch (error) {
       console.error('❌ Failed to initialize Bitcoin Connect:', error)
       throw error
     }
   }
 
-  // Get WebLN provider (launches modal if needed)
+  // Get WebLN provider with NWC fallback
   async getProvider(): Promise<any> {
     if (!this.isInitialized) {
       await this.initialize()
     }
 
     try {
+      // First try existing provider
       if (this.currentProvider) {
         return this.currentProvider
+      }
+
+      // Check for active NWC connection
+      if (this.nwcConnection) {
+        console.log('✅ Using active NWC connection')
+        return this.createNWCProvider()
       }
 
       // Request provider - will launch modal if needed
@@ -105,46 +123,92 @@ class BitcoinConnectService {
     }
   }
 
-  // Launch connection modal manually
+  // Launch modern NWC connection modal
   async launchConnectionModal(): Promise<void> {
     if (!this.isInitialized) {
       await this.initialize()
     }
     
+    // Try modern NWC connection first
+    try {
+      const result = await nwcConnectionManager.connect()
+      if (result.success && result.connection) {
+        this.nwcConnection = result.connection
+        console.log('✅ NWC connection established')
+        return
+      }
+    } catch (error) {
+      console.warn('NWC connection failed, falling back to Bitcoin Connect modal:', error)
+    }
+    
+    // Fallback to traditional Bitcoin Connect modal
     launchModal()
   }
 
-  // Enhanced payment processing with Lightning Tools
+  // Enhanced payment processing with modern NWC patterns
   async processPayment(request: PaymentRequest): Promise<PaymentResult> {
     try {
-      const provider = await this.getProvider()
-      
       // Calculate developer fee
       const developerFee = Math.floor(request.amount * (this.config.developerShare / 100))
       const userAmount = request.amount - developerFee
 
       console.log(`💰 Processing payment: ${request.amount} sats (User: ${userAmount}, Dev: ${developerFee})`)
 
-      // Use Lightning Address for more robust payment processing
+      // Try NWC connection first for modern flow
+      if (this.nwcConnection) {
+        try {
+          // Use Lightning Address for invoice generation
+          const ln = new LightningAddress(this.config.developerAddress)
+          await ln.fetch()
+          
+          const invoice = await ln.requestInvoice({
+            satoshi: userAmount,
+            comment: request.description
+          })
+
+          if (invoice.paymentRequest) {
+            // Send payment via NWC
+            const nwcResult = await nwcConnectionManager.sendPayment(invoice.paymentRequest)
+            
+            if (nwcResult.success && nwcResult.preimage) {
+              // Verify payment
+              const verified = invoice.validatePreimage(nwcResult.preimage)
+              
+              if (verified) {
+                // Process developer payment asynchronously
+                this.processDeveloperPayment(developerFee).catch(console.error)
+                
+                return {
+                  success: true,
+                  preimage: nwcResult.preimage,
+                  developerPayment: true
+                }
+              }
+            }
+          }
+        } catch (nwcError) {
+          console.warn('NWC payment failed, falling back to traditional flow:', nwcError)
+        }
+      }
+
+      // Fallback to traditional Bitcoin Connect flow
+      const provider = await this.getProvider()
+      
       const ln = new LightningAddress(this.config.developerAddress)
       await ln.fetch()
       
-      // Request invoice for user amount
       const invoice = await ln.requestInvoice({
         satoshi: userAmount,
         comment: request.description
       })
 
       if (invoice.paymentRequest) {
-        // Process payment
         const response = await provider.sendPayment(invoice.paymentRequest)
         
         if (response.preimage) {
-          // Verify payment using Lightning Tools
           const verified = invoice.validatePreimage(response.preimage)
           
           if (verified) {
-            // Process developer payment asynchronously
             this.processDeveloperPayment(developerFee).catch(console.error)
             
             return {
@@ -219,16 +283,26 @@ class BitcoinConnectService {
     }
   }
 
-  // Check if wallet is connected
+  // Check if wallet is connected (NWC or traditional)
   isConnected(): boolean {
-    return this.currentProvider !== null
+    return this.currentProvider !== null || this.nwcConnection !== null
   }
 
-  // Disconnect wallet
+  // Disconnect wallet (both NWC and traditional)
   async disconnectWallet(): Promise<void> {
     try {
-      disconnect()
-      this.currentProvider = null
+      // Disconnect NWC connection
+      if (this.nwcConnection) {
+        nwcConnectionManager.disconnect()
+        this.nwcConnection = null
+      }
+      
+      // Disconnect traditional connection
+      if (this.currentProvider) {
+        disconnect()
+        this.currentProvider = null
+      }
+      
       console.log('🔌 Wallet disconnected manually')
     } catch (error) {
       console.error('❌ Failed to disconnect wallet:', error)
@@ -261,6 +335,31 @@ class BitcoinConnectService {
   }
 
   // Private helper methods
+  private createNWCProvider(): any {
+    // Create a WebLN-compatible provider for NWC connections
+    return {
+      sendPayment: async (invoice: string) => {
+        const result = await nwcConnectionManager.sendPayment(invoice)
+        if (result.success) {
+          return { preimage: result.preimage }
+        }
+        throw new Error(result.error || 'Payment failed')
+      },
+      getInfo: async () => {
+        return {
+          alias: this.nwcConnection?.name || 'NWC Wallet',
+          node: {
+            alias: this.nwcConnection?.name || 'NWC Wallet'
+          }
+        }
+      },
+      getBalance: async () => {
+        const result = await nwcConnectionManager.getBalance()
+        return { balance: result.balance || 0 }
+      }
+    }
+  }
+
   private async processDeveloperPayment(amount: number): Promise<void> {
     try {
       console.log(`💸 Processing developer fee: ${amount} sats to ${this.config.developerAddress}`)
