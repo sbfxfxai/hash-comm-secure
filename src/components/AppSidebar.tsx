@@ -11,18 +11,23 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import { 
   Bitcoin, 
   MessageSquare, 
   Shield, 
   User, 
-  Zap, 
   Building2, 
   UserCircle,
   Network,
-  CreditCard
+  CreditCard,
+  LogIn,
+  LogOut
 } from "lucide-react"
+import { useAuth } from "@/contexts/AuthContext"
+import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 interface AppSidebarProps {
   activeTab: string
@@ -75,6 +80,12 @@ const navigationItems = [
 ]
 
 export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
+  const { user, createDIDIdentity, signOut } = useAuth()
+
+  const handleSignIn = () => {
+    createDIDIdentity("User")
+  }
+
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border">
@@ -109,10 +120,35 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border">
-        <div className="p-4 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
-          <p>BitComm v1.0</p>
-          <p>Secure P2P Messaging</p>
-        </div>
+        {user ? (
+          <div className="flex items-center gap-2 p-2">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={user.avatar} />
+              <AvatarFallback>{user.displayName?.[0] || user.did?.[0] || 'U'}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0 group-data-[collapsible=icon]:hidden">
+              <p className="text-sm font-medium truncate">{user.displayName || user.did?.slice(-8)}</p>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={signOut}
+                className="h-6 px-0 text-xs text-muted-foreground hover:text-foreground"
+              >
+                <LogOut className="h-3 w-3 mr-1" />
+                Sign out
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Button 
+            variant="default" 
+            onClick={handleSignIn}
+            className="mx-2 mb-2"
+          >
+            <LogIn className="h-4 w-4" />
+            <span className="ml-2 group-data-[collapsible=icon]:hidden">Sign In</span>
+          </Button>
+        )}
       </SidebarFooter>
       
       <SidebarRail />
