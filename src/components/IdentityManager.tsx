@@ -288,6 +288,36 @@ console.error('Error loading identities from localStorage:', error);
               Each identity is cryptographically secured and registered on Bitcoin
             </CardDescription>
           </CardHeader>
+          <CardContent className="space-y-3">
+            {identities.map((identity) => (
+              <div key={identity.address} className="p-3 border rounded-lg flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-medium">{identity.name}</h3>
+                    {identity.isActive && (
+                      <Badge variant="default" className="bg-green-500 text-xs">
+                        Active
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Bitcoin className="h-4 w-4 text-bitcoin-orange" />
+                    <code className="text-sm text-muted-foreground">
+                      {formatAddress(identity.address)}
+                    </code>
+                    <BitCommButton
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToClipboard(identity.address, 'Bitcoin Address')}
+                      className="h-6 w-6 p-0"
+                    >
+                      <Copy className="h-3 w-3" />
+                    </BitCommButton>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </CardContent>
         </Card>
       )}
     </div>
