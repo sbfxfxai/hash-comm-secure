@@ -71,7 +71,7 @@ export const DomainSelector: React.FC<DomainSelectorProps> = ({
           variant="outline"
           size="sm"
           onClick={handleShowSelector}
-          className="bg-background/80 backdrop-blur-sm shadow-lg border-2"
+          className="bg-background shadow-lg border-2"
         >
           <Globe className="h-4 w-4 mr-2" />
           <span className="hidden sm:inline">Switch Domain</span>
@@ -84,7 +84,7 @@ export const DomainSelector: React.FC<DomainSelectorProps> = ({
   if (!showSelector) return null;
 
   return (
-    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-background/90 z-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-4xl">
         <CardHeader className="text-center">
           <CardTitle className="flex items-center justify-center gap-2">
