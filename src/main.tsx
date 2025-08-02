@@ -5,7 +5,7 @@ import './index.css'
 import CryptoJS from 'crypto-js'
 import { computeProofOfWork, verifyProofOfWork, encryptMessage, decryptMessage } from './lib/bitcomm'
 
-// Make crypto functions globally available for security testing
+// Make crypto functions globally available
 ;(window as any).CryptoJS = CryptoJS
 ;(window as any).computeProofOfWork = computeProofOfWork
 ;(window as any).verifyProofOfWork = verifyProofOfWork

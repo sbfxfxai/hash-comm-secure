@@ -1,4 +1,4 @@
-// P2P Payment Components for BitComm - Enhanced with Lightning Tools and DID Support
+// P2P Payment Components for BitComm - Enhanced with Lightning Tools & DID Integration
 import React, { useState, useEffect } from 'react'
 import { lightningTools } from '@/lib/lightningToolsService'
 import { bitcoinConnect } from '@/lib/bitcoinConnectService'
@@ -106,7 +106,7 @@ export const P2PPaymentCard: React.FC<P2PPaymentProps> = ({
           Send Payment to {recipientName}
         </CardTitle>
         <CardDescription>
-          Send satoshis directly through Lightning Network
+          Send satoshis directly through Lightning Network using DID: {recipientDID.slice(0, 20)}...
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -151,7 +151,7 @@ export const P2PPaymentCard: React.FC<P2PPaymentProps> = ({
 
         <BitCommButton
           onClick={handleP2PPayment}
-          disabled={!amount || !description || isProcessing}
+          disabled={!amount || !description || isProcessing || !user?.did}
           variant="hero"
           className="w-full"
         >
@@ -198,11 +198,15 @@ export const PaywallCard: React.FC<PaywallCardProps> = ({
         onPaid: onPaymentSuccess
       })
 
-      // Launch Bitcoin Connect payment modal
-      await bitcoinConnect.launchPaymentModal(invoice, (response) => {
-        setPaymentResult({ success: true, preimage: response.preimage })
+      // Use Bitcoin Connect's launchPaymentModal with the created invoice
+      const result = await window.webln?.sendPayment(invoice)
+      
+      if (result?.preimage) {
+        setPaymentResult({ success: true, preimage: result.preimage })
         if (onPaymentSuccess) onPaymentSuccess()
-      })
+      } else {
+        throw new Error('Payment failed - no preimage received')
+      }
 
       // Wait for payment verification
       const verified = await verification
@@ -293,6 +297,22 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({ userDID }) => {
     }
   }, [currentDID])
 
+  if (!currentDID) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <History className="h-5 w-5" />
+            Payment History
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-gray-500 text-center py-4">Please sign in with a DID to view payment history</p>
+        </CardContent>
+      </Card>
+    )
+  }
+
   if (payments.length === 0) {
     return (
       <Card>
@@ -316,6 +336,9 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({ userDID }) => {
           <History className="h-5 w-5" />
           Recent Payments
         </CardTitle>
+        <CardDescription>
+          DID: {currentDID?.slice(0, 20)}...
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">

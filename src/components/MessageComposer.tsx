@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { PaywallCard } from '@/components/P2PPaymentComponents';
 import { 
   computeProofOfWork, 
   encryptMessage, 
@@ -26,7 +27,8 @@ import {
   Cpu,
   Hash,
   Shield,
-  User
+  User,
+  Zap
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -239,6 +241,7 @@ console.error('Message send failed. Error details:', error);
               )}
             </div>
           </CardHeader>
+          
           
           <CardContent className="space-y-6">
             {/* Recipient Section - Mobile Optimized */}
