@@ -66,15 +66,16 @@ export const DomainSelector: React.FC<DomainSelectorProps> = ({
 
   if (!showSelector && selectedDomain) {
     return (
-      <div className="fixed top-4 right-4 z-50">
+      <div className="fixed bottom-4 right-4 z-40 md:top-4 md:right-4 md:bottom-auto">
         <Button
           variant="outline"
           size="sm"
           onClick={handleShowSelector}
-          className="bg-background/80 backdrop-blur-sm"
+          className="bg-background/80 backdrop-blur-sm shadow-lg border-2"
         >
           <Globe className="h-4 w-4 mr-2" />
-          Switch Domain
+          <span className="hidden sm:inline">Switch Domain</span>
+          <span className="sm:hidden">Domain</span>
         </Button>
       </div>
     );
