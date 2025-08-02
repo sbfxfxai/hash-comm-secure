@@ -84,7 +84,7 @@ export const DomainSelector: React.FC<DomainSelectorProps> = ({
   if (!showSelector) return null;
 
   return (
-    <div className="fixed inset-0 bg-background/90 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-background/95 z-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-4xl">
         <CardHeader className="text-center">
           <CardTitle className="flex items-center justify-center gap-2">
