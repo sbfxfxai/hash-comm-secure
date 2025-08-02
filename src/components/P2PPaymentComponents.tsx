@@ -1,7 +1,9 @@
-// P2P Payment Components for BitComm - Enhanced with Lightning Tools
+// P2P Payment Components for BitComm - Enhanced with Lightning Tools and DID Support
 import React, { useState, useEffect } from 'react'
 import { lightningTools } from '@/lib/lightningToolsService'
 import { bitcoinConnect } from '@/lib/bitcoinConnectService'
+import { useAuth } from '@/contexts/AuthContext'
+import { useDIDAuth } from '@/contexts/DIDAuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -17,22 +19,25 @@ import {
   Wallet,
   CheckCircle,
   AlertCircle,
-  ArrowRight
+  ArrowRight,
+  Shield
 } from 'lucide-react'
 
 interface P2PPaymentProps {
-  currentUserId: string
-  recipientUserId: string
+  recipientDID: string
   recipientName: string
+  recipientDisplayName?: string
   onPaymentComplete?: (result: any) => void
 }
 
 export const P2PPaymentCard: React.FC<P2PPaymentProps> = ({
-  currentUserId,
-  recipientUserId,
+  recipientDID,
   recipientName,
+  recipientDisplayName,
   onPaymentComplete
 }) => {
+  const { user } = useAuth()
+  const { identity } = useDIDAuth()
   const [amount, setAmount] = useState('')
   const [description, setDescription] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
@@ -40,12 +45,44 @@ export const P2PPaymentCard: React.FC<P2PPaymentProps> = ({
 
   const handleP2PPayment = async () => {
     if (!amount || !description) return
+    if (!user?.did && !identity?.did) {
+      setPaymentResult({ success: false, error: 'No authenticated user found' })
+      return
+    }
 
     setIsProcessing(true)
     try {
+      // Use DID from either AuthContext or DIDAuthContext
+      const currentUserDID = user?.did || identity?.did
+      
+      // Auto-initialize Lightning connections for both users
+      console.log('🔌 Initializing Lightning connections...')
+      
+      // Initialize sender connection
+      const senderConnected = await lightningTools.initializeUserConnection(
+        currentUserDID!, 
+        `${currentUserDID}@getalby.com`
+      )
+      
+      // Initialize recipient connection
+      const recipientConnected = await lightningTools.initializeUserConnection(
+        recipientDID,
+        `${recipientDID}@getalby.com`
+      )
+      
+      if (!senderConnected) {
+        throw new Error('Failed to connect sender to Lightning Network')
+      }
+      
+      if (!recipientConnected) {
+        throw new Error('Failed to connect recipient to Lightning Network')
+      }
+      
+      console.log('✅ Both users connected to Lightning Network')
+      
       const result = await lightningTools.processP2PPayment({
-        fromUserId: currentUserId,
-        toUserId: recipientUserId,
+        fromUserId: currentUserDID!,
+        toUserId: recipientDID,
         amount: parseInt(amount),
         description
       })
@@ -55,7 +92,7 @@ export const P2PPaymentCard: React.FC<P2PPaymentProps> = ({
         onPaymentComplete(result)
       }
     } catch (error) {
-      setPaymentResult({ success: false, error: error.message })
+      setPaymentResult({ success: false, error: error instanceof Error ? error.message : 'Payment failed' })
     } finally {
       setIsProcessing(false)
     }
@@ -238,16 +275,23 @@ export const PaywallCard: React.FC<PaywallCardProps> = ({
 }
 
 interface PaymentHistoryProps {
-  userId: string
+  userDID?: string // Optional - will use current user if not provided
 }
 
-export const PaymentHistory: React.FC<PaymentHistoryProps> = ({ userId }) => {
+export const PaymentHistory: React.FC<PaymentHistoryProps> = ({ userDID }) => {
+  const { user } = useAuth()
+  const { identity } = useDIDAuth()
   const [payments, setPayments] = useState<any[]>([])
+  
+  // Use provided DID or current user's DID
+  const currentDID = userDID || user?.did || identity?.did
 
   useEffect(() => {
-    const history = lightningTools.getP2PPaymentHistory(userId)
-    setPayments(history.slice(-10)) // Show last 10 payments
-  }, [userId])
+    if (currentDID) {
+      const history = lightningTools.getP2PPaymentHistory(currentDID)
+      setPayments(history.slice(-10)) // Show last 10 payments
+    }
+  }, [currentDID])
 
   if (payments.length === 0) {
     return (
@@ -278,8 +322,8 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({ userId }) => {
           {payments.map((payment, index) => (
             <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-full ${payment.from === userId ? 'bg-red-100' : 'bg-green-100'}`}>
-                  {payment.from === userId ? (
+                <div className={`p-2 rounded-full ${payment.from === currentDID ? 'bg-red-100' : 'bg-green-100'}`}>
+                  {payment.from === currentDID ? (
                     <Send className="h-4 w-4 text-red-600" />
                   ) : (
                     <ArrowRight className="h-4 w-4 text-green-600" />
@@ -288,13 +332,13 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({ userId }) => {
                 <div>
                   <p className="font-medium">{payment.description}</p>
                   <p className="text-sm text-gray-500">
-                    {payment.from === userId ? 'Sent' : 'Received'} • {new Date(payment.timestamp).toLocaleDateString()}
+                    {payment.from === currentDID ? 'Sent' : 'Received'} • {new Date(payment.timestamp).toLocaleDateString()}
                   </p>
                 </div>
               </div>
               <div className="text-right">
-                <p className={`font-semibold ${payment.from === userId ? 'text-red-600' : 'text-green-600'}`}>
-                  {payment.from === userId ? '-' : '+'}{payment.amount} sats
+                <p className={`font-semibold ${payment.from === currentDID ? 'text-red-600' : 'text-green-600'}`}>
+                  {payment.from === currentDID ? '-' : '+'}{payment.amount} sats
                 </p>
               </div>
             </div>

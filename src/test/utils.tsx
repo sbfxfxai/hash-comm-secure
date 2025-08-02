@@ -111,12 +111,11 @@ export const createMockIdentity = (overrides = {}) => ({
 })
 
 export const createMockUser = (overrides = {}) => ({
-  id: 'test-user-id',
-  email: 'test@example.com',
-  created_at: new Date().toISOString(),
-  user_metadata: {
-    full_name: 'Test User',
-  },
+  did: 'did:btc:1234567890abcdef1234',
+  publicKey: 'mock-public-key-hex',
+  displayName: 'Test User',
+  avatar: 'https://example.com/avatar.jpg',
+  createdAt: new Date(),
   ...overrides,
 })
 

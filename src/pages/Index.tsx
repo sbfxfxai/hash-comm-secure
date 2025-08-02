@@ -18,6 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
 import { Bitcoin, Shield, Zap, Users, LogOut, User, CreditCard } from 'lucide-react';
+import { P2PPaymentCard, PaywallCard, PaymentHistory } from '@/components/P2PPaymentComponents';
 
 // Component skeleton for loading states
 const ComponentSkeleton = () => (
@@ -80,11 +81,12 @@ const Index = () => {
       {/* Main Content */}
       <section className="container mx-auto px-4 py-12">
         <Tabs defaultValue="network" className="w-full">
-          <TabsList className="grid w-full grid-cols-6 mb-8">
+          <TabsList className="grid w-full grid-cols-7 mb-8">
             <TabsTrigger value="network">P2P Network</TabsTrigger>
             <TabsTrigger value="composer">Message Composer</TabsTrigger>
             <TabsTrigger value="pow">Proof-of-Work Demo</TabsTrigger>
             <TabsTrigger value="identity">Identity Manager</TabsTrigger>
+            <TabsTrigger value="lightning">Lightning Payments</TabsTrigger>
             <TabsTrigger value="enterprise">Enterprise</TabsTrigger>
             <TabsTrigger value="profile">Profile</TabsTrigger>
           </TabsList>
@@ -139,6 +141,44 @@ const Index = () => {
             <Suspense fallback={<ComponentSkeleton />}>
               <IdentityManager />
             </Suspense>
+          </TabsContent>
+
+          <TabsContent value="lightning" className="space-y-6">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold mb-4">Lightning Network Payments</h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Test real Lightning Network payments with instant, low-cost Bitcoin transactions. 
+                Send satoshis peer-to-peer and unlock premium features.
+              </p>
+            </div>
+            <ProtectedRoute>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* P2P Payment Test */}
+                <P2PPaymentCard
+                  recipientDID="did:btc:1234567890abcdef"
+                  recipientName="Test Recipient"
+                  recipientDisplayName="Test User"
+                  onPaymentComplete={(result) => {
+                    console.log('Payment completed:', result)
+                  }}
+                />
+                
+                {/* Paywall Test */}
+                <PaywallCard
+                  feature="Premium Messaging"
+                  amount={1000}
+                  description="Unlock unlimited encrypted messages with enhanced features"
+                  onPaymentSuccess={() => {
+                    console.log('Premium feature unlocked!')
+                  }}
+                />
+              </div>
+              
+              {/* Payment History */}
+              <div className="mt-8">
+                <PaymentHistory />
+              </div>
+            </ProtectedRoute>
           </TabsContent>
 
           <TabsContent value="enterprise" className="space-y-6">
