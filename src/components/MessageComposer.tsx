@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PaywallCard } from '@/components/P2PPaymentComponents';
+import { lightningTools } from '@/lib/lightningToolsService';
 import { 
   computeProofOfWork, 
   encryptMessage, 
@@ -361,6 +362,22 @@ console.error('Message send failed. Error details:', error);
               </div>
             )}
 
+            {/* Lightning Payment Card - 10 sats per message */}
+            <div className="p-4 bg-bitcoin-orange/5 border border-bitcoin-orange/20 rounded-lg space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-bitcoin-orange" />
+                  <span className="text-sm font-medium">Message Fee</span>
+                </div>
+                <Badge variant="outline" className="text-bitcoin-orange border-bitcoin-orange">
+                  10 sats
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Sending messages costs 10 satoshis via Lightning Network. This helps prevent spam and supports the network.
+              </p>
+            </div>
+
             {/* Send Button - Full Width on Mobile */}
             <BitCommButton
               onClick={sendMessage}
@@ -379,7 +396,7 @@ console.error('Message send failed. Error details:', error);
               ) : (
                 <>
                   <Send className="h-4 w-4 mr-2" />
-                  {!activeIdentity ? 'Identity Required' : 'Send Encrypted Message'}
+                  {!activeIdentity ? 'Identity Required' : 'Send Message (10 sats)'}
                 </>
               )}
             </BitCommButton>
