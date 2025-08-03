@@ -306,9 +306,9 @@ export class SecureP2PNetwork {
       // Use mesh routing
       this.routeMessage(envelope);
       
-      // For now, also simulate local delivery for testing
+      // For testing: simulate cross-browser delivery via localStorage
       setTimeout(() => {
-        this.simulateMessageReception(envelope);
+        this.simulateCrossBrowserDelivery(envelope);
       }, 1000);
       
       return true;
@@ -342,8 +342,33 @@ export class SecureP2PNetwork {
     return bytes.toString(CryptoJS.enc.Utf8);
   }
 
-  private simulateMessageReception(envelope: MessageEnvelope): void {
-    // Store received message for testing
+  private simulateCrossBrowserDelivery(envelope: MessageEnvelope): void {
+    // Store message in global message queue for cross-browser delivery
+    const globalQueue = 'bitcomm-global-messages';
+    const storedMessages = localStorage.getItem(globalQueue) || '[]';
+    const messages = JSON.parse(storedMessages);
+    
+    // Add message with delivery metadata
+    const deliveryEnvelope = {
+      ...envelope,
+      deliveryStatus: 'pending',
+      deliveredTo: [],
+      createdAt: Date.now()
+    };
+    
+    messages.unshift(deliveryEnvelope);
+    localStorage.setItem(globalQueue, JSON.stringify(messages.slice(0, 100))); // Keep last 100
+    
+    console.log('🌐 Cross-browser message queued:', envelope.id, 'for recipient:', envelope.message.to);
+    
+    // Also store in local received messages if it's for us (for testing same-browser scenarios)
+    if (envelope.message.to === this.bitcommAddress) {
+      this.simulateLocalReception(envelope);
+    }
+  }
+
+  private simulateLocalReception(envelope: MessageEnvelope): void {
+    // Store received message locally
     const storedMessages = localStorage.getItem('bitcomm-received-messages') || '[]';
     const messages = JSON.parse(storedMessages);
     messages.unshift(envelope);
@@ -351,8 +376,9 @@ export class SecureP2PNetwork {
     
     // Notify handlers
     this.messageHandlers.forEach(handler => handler(envelope));
-    console.log('📨 Simulated secure message reception:', envelope.id);
+    console.log('📨 Local message reception simulated:', envelope.id);
   }
+
 
   private onPeerConnected(peerId: string): void {
     console.log('✅ Peer connected:', peerId);

@@ -257,6 +257,39 @@ export const Inbox: React.FC = () => {
       });
     };
 
+    // Function to check for cross-browser messages
+    const checkCrossBrowserMessages = () => {
+      if (!user?.did) return;
+      
+      const globalQueue = localStorage.getItem('bitcomm-global-messages');
+      if (!globalQueue) return;
+      
+      try {
+        const globalMessages = JSON.parse(globalQueue);
+        const myMessages = globalMessages.filter((msg: any) => 
+          msg.message.to === user.did && 
+          !msg.deliveredTo.includes(user.did)
+        );
+        
+        if (myMessages.length > 0) {
+          console.log(`🌐 Found ${myMessages.length} cross-browser messages for ${user.did}`);
+          
+          myMessages.forEach((envelope: any) => {
+            handleP2PMessage(envelope);
+            
+            // Mark as delivered to this user
+            envelope.deliveredTo.push(user.did);
+            envelope.deliveryStatus = 'delivered';
+          });
+          
+          // Update global queue
+          localStorage.setItem('bitcomm-global-messages', JSON.stringify(globalMessages));
+        }
+      } catch (error) {
+        console.error('Error checking cross-browser messages:', error);
+      }
+    };
+
     // Add P2P message handler
     secureP2P.addMessageHandler(handleP2PMessage);
 
