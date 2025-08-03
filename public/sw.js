@@ -1,5 +1,5 @@
 // BitComm Service Worker
-const CACHE_NAME = 'bitcomm-v1';
+const CACHE_NAME = 'bitcomm-v3'; // Force complete cache refresh
 const STATIC_CACHE_URLS = [
   '/',
   '/manifest.json',
@@ -61,6 +61,37 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // For JS modules and dynamic imports, always fetch from network first
+  const isJSModule = event.request.url.includes('/assets/') && event.request.url.endsWith('.js');
+  const isDynamicImport = event.request.destination === 'script' || event.request.destination === '';
+  
+  if (isJSModule || isDynamicImport) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response.ok) {
+            // Clone and cache the response
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          }
+          return response;
+        })
+        .catch((error) => {
+          console.error('Service Worker: Failed to fetch JS module', event.request.url, error);
+          // Fallback to cache for JS modules
+          return caches.match(event.request).then((cachedResponse) => {
+            if (cachedResponse) {
+              return cachedResponse;
+            }
+            throw error;
+          });
+        })
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then((cachedResponse) => {
@@ -96,7 +127,7 @@ self.addEventListener('fetch', (event) => {
               return caches.match('/');
             }
             
-            throw error;
+            return new Response('Service Unavailable', { status: 503, statusText: 'Service Unavailable' });
           });
       })
   );
