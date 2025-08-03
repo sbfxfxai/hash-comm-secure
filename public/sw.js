@@ -1,5 +1,5 @@
 // BitComm Service Worker
-const CACHE_NAME = 'bitcomm-v3'; // Force complete cache refresh
+const CACHE_NAME = 'bitcomm-v4'; // Fix JS module loading issues
 const STATIC_CACHE_URLS = [
   '/',
   '/manifest.json',
@@ -49,7 +49,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - only cache static assets, let everything else pass through
 self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') {
@@ -61,76 +61,63 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // For JS modules and dynamic imports, always fetch from network first
-  const isJSModule = event.request.url.includes('/assets/') && event.request.url.endsWith('.js');
-  const isDynamicImport = event.request.destination === 'script' || event.request.destination === '';
+  // Don't intercept JavaScript modules, CSS, or any assets - let them load normally
+  const isAsset = event.request.url.includes('/assets/');
+  const isJSModule = event.request.url.endsWith('.js');
+  const isCSS = event.request.url.endsWith('.css');
+  const isDynamicImport = event.request.destination === 'script';
   
-  if (isJSModule || isDynamicImport) {
-    event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          if (response.ok) {
-            // Clone and cache the response
-            const responseToCache = response.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseToCache);
-            });
-          }
-          return response;
-        })
-        .catch((error) => {
-          console.error('Service Worker: Failed to fetch JS module', event.request.url, error);
-          // Fallback to cache for JS modules
-          return caches.match(event.request).then((cachedResponse) => {
-            if (cachedResponse) {
-              return cachedResponse;
-            }
-            throw error;
-          });
-        })
-    );
+  if (isAsset || isJSModule || isCSS || isDynamicImport) {
+    // Don't intercept these requests - let them go directly to the network
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request)
-      .then((cachedResponse) => {
-        if (cachedResponse) {
-          console.log('Service Worker: Serving from cache', event.request.url);
-          return cachedResponse;
-        }
+  // Only cache basic static files and navigation requests
+  const staticFiles = ['/', '/manifest.json', '/bitcomm-logo.svg', '/favicon.ico', '/favicon.svg'];
+  const isStaticFile = staticFiles.some(file => event.request.url.endsWith(file));
+  const isNavigation = event.request.destination === 'document';
+  
+  if (isStaticFile || isNavigation) {
+    event.respondWith(
+      caches.match(event.request)
+        .then((cachedResponse) => {
+          if (cachedResponse) {
+            console.log('Service Worker: Serving from cache', event.request.url);
+            return cachedResponse;
+          }
 
-        console.log('Service Worker: Fetching from network', event.request.url);
-        return fetch(event.request)
-          .then((response) => {
-            // Check if response is valid
-            if (!response || response.status !== 200 || response.type !== 'basic') {
+          console.log('Service Worker: Fetching from network', event.request.url);
+          return fetch(event.request)
+            .then((response) => {
+              // Check if response is valid
+              if (!response || response.status !== 200 || response.type !== 'basic') {
+                return response;
+              }
+
+              // Clone response for caching
+              const responseToCache = response.clone();
+
+              // Cache the response for future requests
+              caches.open(CACHE_NAME)
+                .then((cache) => {
+                  cache.put(event.request, responseToCache);
+                });
+
               return response;
-            }
-
-            // Clone response for caching
-            const responseToCache = response.clone();
-
-            // Cache the response for future requests
-            caches.open(CACHE_NAME)
-              .then((cache) => {
-                cache.put(event.request, responseToCache);
-              });
-
-            return response;
-          })
-          .catch((error) => {
-            console.error('Service Worker: Fetch failed', error);
-            
-            // Return offline page for navigation requests
-            if (event.request.destination === 'document') {
-              return caches.match('/');
-            }
-            
-            return new Response('Service Unavailable', { status: 503, statusText: 'Service Unavailable' });
-          });
-      })
-  );
+            })
+            .catch((error) => {
+              console.error('Service Worker: Fetch failed', error);
+              
+              // Return offline page for navigation requests
+              if (event.request.destination === 'document') {
+                return caches.match('/');
+              }
+              
+              return new Response('Service Unavailable', { status: 503, statusText: 'Service Unavailable' });
+            });
+        })
+    );
+  }
 });
 
 // Handle background sync for offline message queue
