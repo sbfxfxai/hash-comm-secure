@@ -19,42 +19,79 @@ export default defineConfig(({ mode }) => ({
     }
   },
   build: {
+    // Target modern browsers for smaller bundles
+    target: 'es2020',
     // Code splitting optimizations
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Vendor chunk for large third-party libraries
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          // Crypto chunk for security-related libraries
-          crypto: ['crypto-js'],
-          // P2P chunk for networking libraries
-          p2p: ['libp2p', '@libp2p/webrtc', '@libp2p/kad-dht'],
-          // UI chunk for UI components
-          ui: [
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-dropdown-menu',
-            '@radix-ui/react-toast',
-            'lucide-react'
-          ]
+        // Advanced chunking strategy
+        manualChunks(id) {
+          // Vendor chunk for core React ecosystem
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+              return 'vendor';
+            }
+            // Crypto libraries
+            if (id.includes('crypto-js') || id.includes('bitcoin') || id.includes('lightning')) {
+              return 'crypto';
+            }
+            // P2P networking
+            if (id.includes('libp2p') || id.includes('webrtc') || id.includes('kad-dht')) {
+              return 'p2p';
+            }
+            // UI component libraries
+            if (id.includes('@radix-ui') || id.includes('lucide-react') || id.includes('recharts')) {
+              return 'ui';
+            }
+            // Charts and visualization
+            if (id.includes('recharts') || id.includes('date-fns')) {
+              return 'charts';
+            }
+            // QR and scanning libraries
+            if (id.includes('qr') || id.includes('scanner')) {
+              return 'qr';
+            }
+            // All other node_modules
+            return 'vendor-misc';
+          }
+        },
+        // Optimize chunk names and sizes
+        chunkFileNames: (chunkInfo) => {
+          const facadeModuleId = chunkInfo.facadeModuleId
+            ? chunkInfo.facadeModuleId.split('/').pop().replace('.tsx', '').replace('.ts', '')
+            : 'chunk';
+          return `${facadeModuleId}-[hash].js`;
         }
       }
     },
+    // Aggressive minification
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: mode === 'production',
+        drop_debugger: mode === 'production',
+        pure_funcs: mode === 'production' ? ['console.log', 'console.info', 'console.debug'] : [],
+        passes: 2
+      },
+      mangle: {
+        safari10: true
+      },
+      format: {
+        comments: false
+      }
+    },
+    // Optimize chunk size
+    chunkSizeWarningLimit: 500,
     // Fix preload warnings
     modulePreload: {
       polyfill: false
     },
     // Enable CSS code splitting
     cssCodeSplit: true,
-    // Minification settings
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: mode === 'production',
-        drop_debugger: mode === 'production'
-      }
-    },
     // Source maps for debugging
-    sourcemap: mode === 'development'
+    sourcemap: mode === 'development',
+    // Reduce bundle size
+    reportCompressedSize: false
   },
   plugins: [
     react(),

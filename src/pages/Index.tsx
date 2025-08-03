@@ -5,15 +5,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { AppSidebar } from '@/components/AppSidebar';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 
-// Lazy load heavy components
-const Inbox = lazy(() => import('@/components/Inbox').then(m => ({ default: m.Inbox })));
-const ContactManager = lazy(() => import('@/components/ContactManager').then(m => ({ default: m.ContactManager })));
-const IdentityManager = lazy(() => import('@/components/IdentityManager').then(m => ({ default: m.IdentityManager })));
-const MessageComposer = lazy(() => import('@/components/MessageComposer').then(m => ({ default: m.MessageComposer })));
-const P2PNetworkStatus = lazy(() => import('@/components/P2PNetworkStatus').then(m => ({ default: m.P2PNetworkStatus })));
-const AdminDashboard = lazy(() => import('@/components/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
-const PricingPage = lazy(() => import('@/components/PricingPage').then(m => ({ default: m.PricingPage })));
-const UserProfile = lazy(() => import('@/components/UserProfile').then(m => ({ default: m.UserProfile })));
+// Lazy load heavy components with preloading hints
+const Inbox = lazy(() => import(/* webpackChunkName: "inbox" */ '@/components/Inbox').then(m => ({ default: m.Inbox })));
+const ContactManager = lazy(() => import(/* webpackChunkName: "contacts" */ '@/components/ContactManager').then(m => ({ default: m.ContactManager })));
+const IdentityManager = lazy(() => import(/* webpackChunkName: "identity" */ '@/components/IdentityManager').then(m => ({ default: m.IdentityManager })));
+const MessageComposer = lazy(() => import(/* webpackChunkName: "composer" */ '@/components/MessageComposer').then(m => ({ default: m.MessageComposer })));
+const P2PNetworkStatus = lazy(() => import(/* webpackChunkName: "p2p" */ '@/components/P2PNetworkStatus').then(m => ({ default: m.P2PNetworkStatus })));
+const AdminDashboard = lazy(() => import(/* webpackChunkName: "admin" */ '@/components/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
+const PricingPage = lazy(() => import(/* webpackChunkName: "pricing" */ '@/components/PricingPage').then(m => ({ default: m.PricingPage })));
+const UserProfile = lazy(() => import(/* webpackChunkName: "profile" */ '@/components/UserProfile').then(m => ({ default: m.UserProfile })));
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BitCommButton } from '@/components/ui/bitcomm-button';
 import { Button } from '@/components/ui/button';

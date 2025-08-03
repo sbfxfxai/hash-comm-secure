@@ -3,16 +3,38 @@ import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import { AuthProvider } from './contexts/AuthContext'
 import './index.css'
-import CryptoJS from 'crypto-js'
-import { computeProofOfWork, verifyProofOfWork, encryptMessage, decryptMessage } from './lib/bitcomm'
+import { perfMonitor } from './utils/performance'
 
-// Make React and crypto functions globally available
+// Make React globally available for UI components
 ;(window as any).React = React
-;(window as any).CryptoJS = CryptoJS
-;(window as any).computeProofOfWork = computeProofOfWork
-;(window as any).verifyProofOfWork = verifyProofOfWork
-;(window as any).encryptMessage = encryptMessage
-;(window as any).decryptMessage = decryptMessage
+
+// Lazy load and expose crypto functions only when needed
+const loadCryptoFunctions = async () => {
+  const [CryptoJS, { computeProofOfWork, verifyProofOfWork, encryptMessage, decryptMessage }] = await Promise.all([
+    import('crypto-js'),
+    import('./lib/bitcomm')
+  ]);
+  
+  ;(window as any).CryptoJS = CryptoJS.default
+  ;(window as any).computeProofOfWork = computeProofOfWork
+  ;(window as any).verifyProofOfWork = verifyProofOfWork
+  ;(window as any).encryptMessage = encryptMessage
+  ;(window as any).decryptMessage = decryptMessage
+};
+
+// Load crypto functions after initial app render with fallback
+const scheduleIdleTask = (callback: () => void, timeout = 2000) => {
+  if ('requestIdleCallback' in window) {
+    requestIdleCallback(callback, { timeout });
+  } else {
+    // Fallback for browsers without requestIdleCallback
+    setTimeout(callback, 100);
+  }
+};
+
+scheduleIdleTask(() => {
+  loadCryptoFunctions().catch(console.error);
+});
 
 createRoot(document.getElementById("root")!).render(
   <AuthProvider>
