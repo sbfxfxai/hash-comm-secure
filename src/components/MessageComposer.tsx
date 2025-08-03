@@ -101,9 +101,27 @@ export function MessageComposer() {
       const parsed = JSON.parse(storedIdentities);
       setIdentities(parsed);
       const active = parsed.find((id: StoredIdentity) => id.isActive);
-      if (active) setActiveIdentity(active);
+      if (active) {
+        setActiveIdentity(active);
+        // Auto-initialize P2P network when active identity is found
+        initializeP2PNetwork(active.address);
+      }
     }
   }, []);
+
+  // Auto-initialize P2P network
+  const initializeP2PNetwork = async (address: string) => {
+    try {
+      const stats = secureP2P.getNetworkStats();
+      if (!stats.isOnline) {
+        console.log('🚀 Auto-initializing P2P network for:', address);
+        await secureP2P.initialize(address);
+        console.log('✅ P2P network initialized successfully');
+      }
+    } catch (error) {
+      console.log('📝 P2P auto-initialization failed, messages will be stored locally:', error);
+    }
+  };
 
   const addContact = () => {
     if (!newContactName || !newContactAddress || !newContactPubKey) {

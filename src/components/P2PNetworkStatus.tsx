@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { BitCommButton } from '@/components/ui/bitcomm-button';
 import { Wifi, WifiOff, Users, Activity, Radio } from 'lucide-react';
-import { webrtcP2P as bitcommP2P, MessageEnvelope } from '@/lib/p2p/webrtc-p2p';
+import { secureP2P, MessageEnvelope } from '@/lib/p2p/secure-p2p-network';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -22,7 +22,7 @@ export const P2PNetworkStatus = () => {
   const [receivedMessages, setReceivedMessages] = useState<MessageEnvelope[]>([]);
 
   const updateNetworkStats = () => {
-    const stats = bitcommP2P.getNetworkStats();
+    const stats = secureP2P.getNetworkStats();
     setNetworkStats(stats);
     setIsConnected(stats.isOnline);
   };
@@ -40,9 +40,9 @@ export const P2PNetworkStatus = () => {
     try {
       // Initialize P2P network with user's DID
       if (user?.did) {
-        await bitcommP2P.initialize(user.did);
+        await secureP2P.initialize(user.did);
       }
-      bitcommP2P.addMessageHandler(handleReceivedMessage);
+      secureP2P.addMessageHandler(handleReceivedMessage);
       updateNetworkStats();
       
       toast({
@@ -67,7 +67,7 @@ export const P2PNetworkStatus = () => {
 
   const shutdownP2P = async () => {
     try {
-      await bitcommP2P.shutdown();
+      await secureP2P.shutdown();
       setIsConnected(false);
       setNetworkStats({
         peerId: 'Not connected',
