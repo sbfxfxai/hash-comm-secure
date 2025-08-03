@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { QRAddressManager, AddressInfo } from '../lib/qr-address';
 import { useToast } from '../hooks/use-toast';
 import { Button } from './ui/button';
-import { Barcode, Warning, CameraOff } from 'lucide-react';
+import { Barcode, AlertTriangle, CameraOff } from 'lucide-react';
 
 interface QRAddressScannerProps {
   onScanComplete: (addressInfo: AddressInfo) => void;
@@ -83,7 +83,7 @@ export const QRAddressScanner: React.FC<QRAddressScannerProps> = ({ onScanComple
       {!isScanning && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="text-center text-white">
-            <Warning className="w-8 h-8 mx-auto mb-2" />
+            <AlertTriangle className="w-8 h-8 mx-auto mb-2" />
             <p className="text-sm">Camera is off. Start scanning to proceed.</p>
           </div>
         </div>
