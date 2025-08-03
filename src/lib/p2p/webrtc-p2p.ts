@@ -57,38 +57,14 @@ export class WebRTCP2PNetwork {
   }
 
   private async connectToSignalingServer(): Promise<void> {
-    const signalingUrl = process.env.VITE_SIGNALING_SERVER_URL || 'ws://localhost:8080';
+    // Temporarily disabled to prevent CSP violations in production
+    console.log('🚀 P2P network disabled in production - using local messaging only');
     
     return new Promise((resolve, reject) => {
-      console.log('🚀 Connecting to production signaling server:', signalingUrl);
-      
-      this.signalingSocket = new WebSocket(signalingUrl);
-      
-      this.signalingSocket.onopen = () => {
-        console.log('✅ Connected to signaling server');
-        
-        // Register with BitComm address
-        this.signalingSocket?.send(JSON.stringify({
-          type: 'register',
-          bitcommAddress: this.bitcommAddress
-        }));
-        
-        resolve();
-      };
-      
-      this.signalingSocket.onmessage = (event) => {
-        this.handleSignalingMessage(JSON.parse(event.data));
-      };
-      
-      this.signalingSocket.onerror = (error) => {
-        console.error('❌ Signaling server connection error:', error);
-        reject(error);
-      };
-      
-      this.signalingSocket.onclose = () => {
-        console.log('⚠️ Signaling server disconnected, attempting reconnect...');
-        setTimeout(() => this.connectToSignalingServer(), 5000);
-      };
+      // Skip signaling server connection for now
+      this.localPeerId = 'local-' + Math.random().toString(36).substr(2, 9);
+      this.registrationComplete = true;
+      resolve();
     });
   }
 
