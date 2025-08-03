@@ -1,0 +1,14 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle for maskable icon -->
+  <circle cx="256" cy="256" r="256" fill="#f97316"/>
+  <!-- Inner content area (safe zone for maskable) -->
+  <g transform="translate(64, 64)">
+    <!-- Bitcoin-style 'B' -->
+    <path d="M100 80 L100 320 L200 320 Q240 320 260 290 Q280 260 280 220 Q280 180 260 150 Q240 120 200 120 L160 120 L160 80 Z M140 160 L200 160 Q220 160 230 175 Q240 190 240 220 Q240 250 230 265 Q220 280 200 280 L140 280 Z" fill="white"/>
+    <!-- Communication waves -->
+    <circle cx="320" cy="150" r="8" fill="white" opacity="0.8"/>
+    <circle cx="320" cy="150" r="16" fill="none" stroke="white" stroke-width="2" opacity="0.6"/>
+    <circle cx="320" cy="150" r="24" fill="none" stroke="white" stroke-width="2" opacity="0.4"/>
+    <circle cx="320" cy="150" r="32" fill="none" stroke="white" stroke-width="2" opacity="0.2"/>
+  </g>
+</svg>
