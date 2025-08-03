@@ -57,7 +57,7 @@ export class WebRTCP2PNetwork {
   }
 
   private async connectToSignalingServer(): Promise<void> {
-    const signalingUrl = process.env.VITE_SIGNALING_SERVER_URL || 'wss://bitcomm-signaling.herokuapp.com';
+    const signalingUrl = process.env.VITE_SIGNALING_SERVER_URL || 'ws://localhost:8080';
     
     return new Promise((resolve, reject) => {
       console.log('🚀 Connecting to production signaling server:', signalingUrl);
