@@ -346,9 +346,9 @@ export default function App() {
     };
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 p-2 lg:p-4">
-            {/* Mobile-First Message Composer */}
-            <div className="lg:col-span-2 order-1 lg:order-1">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 lg:gap-6 p-2 md:p-3 lg:p-4">
+            {/* Message Composer */}
+            <div className="md:col-span-2 order-1">
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-fit">
                     <div className="p-4 border-b border-gray-200">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -599,7 +599,7 @@ export default function App() {
             </div>
 
             {/* Sidebar */}
-            <div className="order-2 lg:order-2 space-y-4 lg:space-y-6">
+            <div className="order-2 space-y-3 md:space-y-4 lg:space-y-6">
                 {/* Quick Add Contact Modal */}
                 {showAddContact && (
                     <div className="bg-white rounded-lg shadow-sm border border-orange-200">
@@ -671,13 +671,13 @@ export default function App() {
                     </div>
                     <div className="p-4">
                         {contacts.length === 0 ? (
-                            <div className="text-center py-6 lg:py-8 text-gray-500">
+                            <div className="text-center py-4 md:py-6 lg:py-8 text-gray-500">
                                 <User className="h-6 w-6 lg:h-8 lg:w-8 mx-auto mb-2 opacity-50" />
                                 <p className="text-sm">No contacts yet</p>
                                 <p className="text-xs">Add contacts to send messages</p>
                             </div>
                         ) : (
-                            <div className="max-h-[180px] lg:max-h-[200px] overflow-y-auto">
+                            <div className="max-h-[120px] md:max-h-[180px] lg:max-h-[200px] overflow-y-auto">
                                 <div className="space-y-2">
                                     {contacts.map((contact, index) => (
                                         <div
@@ -715,13 +715,13 @@ export default function App() {
                     </div>
                     <div className="p-4">
                         {sentMessages.length === 0 ? (
-                            <div className="text-center py-6 lg:py-8 text-gray-500">
+                            <div className="text-center py-4 md:py-6 lg:py-8 text-gray-500">
                                 <Mail className="h-6 w-6 lg:h-8 lg:w-8 mx-auto mb-2 opacity-50" />
                                 <p className="text-sm">No messages sent</p>
                                 <p className="text-xs">Your sent messages appear here</p>
                             </div>
                         ) : (
-                            <div className="max-h-[250px] lg:max-h-[300px] overflow-y-auto">
+                            <div className="max-h-[150px] md:max-h-[250px] lg:max-h-[300px] overflow-y-auto">
                                 <div className="space-y-3">
                                     {sentMessages.slice(0, 10).map((msg, index) => (
                                         <div key={index} className="p-3 bg-gray-50 rounded-lg">
