@@ -461,22 +461,24 @@ export const Inbox: React.FC = () => {
   };
 
   return (
-    cdiv className="h-full flex"
+    <div className="h-full flex">
       {/* Mobile-specific navigation */}
       {isMobile && (
-        cdiv className="flex items-center justify-between p-2 border-b"
-          cButton onClick={() = 3e setCurrentView('folders')} variant="ghost" icon>
-            cMenu className="h-5 w-5" />
-          c/Button
-          cdiv className="font-bold"{currentView.charAt(0).toUpperCase() + currentView.slice(1)}/div
-          cdiv>
+        <div className="flex items-center justify-between p-2 border-b">
+          <Button onClick={() => setCurrentView('folders')} variant="ghost" size="icon">
+            <Menu className="h-5 w-5" />
+          </Button>
+          <div className="font-bold">
+            {currentView.charAt(0).toUpperCase() + currentView.slice(1)}
+          </div>
+          <div>
             {currentView === 'content' && (
-              cButton onClick={() = 3e setCurrentView('messages')} variant="ghost" icon>
-                cArrowLeft className="h-5 w-5" />
-              c/Button
+              <Button onClick={() => setCurrentView('messages')} variant="ghost" size="icon">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
             )}
-          c/div
-        c/div
+          </div>
+        </div>
       )}
       {/* Sidebar */}
       <div className="w-64 border-r border-border">
