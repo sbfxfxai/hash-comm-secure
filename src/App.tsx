@@ -1,21 +1,22 @@
-﻿import React, { useState, useEffect } from 'react';
-import {
-    Send,
-    Mail,
-    Lock,
-    Clock,
-    CheckCircle,
-    AlertCircle,
-    Cpu,
-    Hash,
-    Shield,
-    User,
-    Zap,
-    QrCode,
-    Plus,
-    X,
-    Camera
-} from 'lucide-react';
+import React, { useState } from 'react';
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
+import { AppSidebar } from '@/components/AppSidebar';
+import { Separator } from '@/components/ui/separator';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
+
+// Import all your components
+import { Inbox } from '@/components/Inbox';
+import { ContactManager } from '@/components/ContactManager';
+import { P2PNetworkStatus } from '@/components/P2PNetworkStatus';
+import { MessageComposer } from '@/components/MessageComposer';
+import { ProofOfWorkDemo } from '@/components/ProofOfWorkDemo';
+import { IdentityManager } from '@/components/IdentityManager';
+import { P2PPaymentComponents } from '@/components/P2PPaymentComponents';
+import { AdminDashboard } from '@/components/AdminDashboard';
+import { UserProfile } from '@/components/UserProfile';
+
+// Auth Provider (create if it doesn't exist)
+import { AuthProvider } from '@/contexts/AuthContext';
 
 interface StoredIdentity {
     privateKey: string;
