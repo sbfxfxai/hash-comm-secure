@@ -79,12 +79,18 @@ export function TestPage() {
         
         // Check if we can access the provider directly
         try {
-          const provider = await window.bitcoinConnect?.requestProvider?.();
-          if (provider) {
-            console.log('Bitcoin Connect provider found:', provider);
-            // Force connection success for testing
+          // Check for any available Bitcoin Connect provider
+          const bitcoinConnect = (window as any).bitcoinConnect;
+          if (bitcoinConnect?.requestProvider) {
+            const provider = await bitcoinConnect.requestProvider();
+            if (provider) {
+              console.log('Bitcoin Connect provider found:', provider);
+              // Force connection success for testing
+            } else {
+              throw new Error('No Lightning provider available. Please ensure your wallet is properly connected.');
+            }
           } else {
-            throw new Error('No Lightning provider available. Please ensure your wallet is properly connected.');
+            throw new Error('Bitcoin Connect not available. Please ensure your wallet is properly connected.');
           }
         } catch (providerError) {
           console.error('Provider error:', providerError);

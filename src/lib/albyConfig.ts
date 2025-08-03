@@ -157,6 +157,19 @@ class AlbyConfigService {
     return this.config.pricing[feature]
   }
 
+  // Get all pricing configuration
+  getPricing() {
+    return this.config.pricing
+  }
+
+  // Get developer configuration
+  getDeveloperConfig() {
+    return {
+      address: this.config.developerAddress,
+      share: this.config.developerShare
+    }
+  }
+
   // Calculate developer fee
   calculateDeveloperFee(amount: number): number {
     return Math.floor(amount * this.config.developerShare)
@@ -313,4 +326,3 @@ export const albyConfig = new AlbyConfigService()
 
 // Export types and service
 export default albyConfig
-export type { AlbyConfig, AlbyFeatures }
