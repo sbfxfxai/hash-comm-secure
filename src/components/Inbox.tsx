@@ -696,7 +696,7 @@ export const Inbox: React.FC = () => {
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <Mail className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium">No message selected</h3>
+              <h2 className="text-lg font-medium">No message selected</h2>
               <p className="text-muted-foreground">
                 Choose a message from the list to read it here
               </p>

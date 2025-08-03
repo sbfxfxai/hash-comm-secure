@@ -114,22 +114,38 @@ const Index = () => {
             
             {/* Tab Content */}
             {activeTab === "inbox" && (
-              <div className="h-[calc(100vh-140px)]">
-                <ProtectedRoute>
-                  <Suspense fallback={<ComponentSkeleton />}>
-                    <Inbox />
-                  </Suspense>
-                </ProtectedRoute>
+              <div className="space-y-6">
+                <div className="text-center mb-8">
+                  <h2 className="text-3xl font-bold mb-4">Secure Message Inbox</h2>
+                  <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                    Receive and manage encrypted P2P messages with Bitcoin-level security and proof-of-work anti-spam protection.
+                  </p>
+                </div>
+                <div className="h-[calc(100vh-280px)]">
+                  <ProtectedRoute>
+                    <Suspense fallback={<ComponentSkeleton />}>
+                      <Inbox />
+                    </Suspense>
+                  </ProtectedRoute>
+                </div>
               </div>
             )}
             
             {activeTab === "contacts" && (
-              <div className="h-[calc(100vh-140px)]">
-                <ProtectedRoute>
-                  <Suspense fallback={<ComponentSkeleton />}>
-                    <ContactManager />
-                  </Suspense>
-                </ProtectedRoute>
+              <div className="space-y-6">
+                <div className="text-center mb-8">
+                  <h2 className="text-3xl font-bold mb-4">Contact Management</h2>
+                  <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                    Manage your decentralized contacts with DID-based addressing, reputation tracking, and Lightning Network integration.
+                  </p>
+                </div>
+                <div className="h-[calc(100vh-280px)]">
+                  <ProtectedRoute>
+                    <Suspense fallback={<ComponentSkeleton />}>
+                      <ContactManager />
+                    </Suspense>
+                  </ProtectedRoute>
+                </div>
               </div>
             )}
             
