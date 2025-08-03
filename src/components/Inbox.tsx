@@ -7,6 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { 
   Mail, 
   Search, 
@@ -25,7 +26,10 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
-  Zap
+  Zap,
+  Menu,
+  ArrowLeft,
+  X
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -36,6 +40,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { secureP2P, type MessageEnvelope } from '@/lib/p2p/secure-p2p-network';
 import { decryptMessage } from '@/lib/bitcomm';
 
@@ -214,6 +219,11 @@ export const Inbox: React.FC = () => {
     subject: '',
     content: ''
   });
+  
+  // Mobile state management
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [currentView, setCurrentView] = useState<'folders' | 'messages' | 'content'>('folders');
+  const isMobile = useIsMobile();
   
   const { user } = useAuth();
   const { toast } = useToast();
@@ -451,7 +461,23 @@ export const Inbox: React.FC = () => {
   };
 
   return (
-    <div className="h-full flex">
+    cdiv className="h-full flex"
+      {/* Mobile-specific navigation */}
+      {isMobile && (
+        cdiv className="flex items-center justify-between p-2 border-b"
+          cButton onClick={() = 3e setCurrentView('folders')} variant="ghost" icon>
+            cMenu className="h-5 w-5" />
+          c/Button
+          cdiv className="font-bold"{currentView.charAt(0).toUpperCase() + currentView.slice(1)}/div
+          cdiv>
+            {currentView === 'content' && (
+              cButton onClick={() = 3e setCurrentView('messages')} variant="ghost" icon>
+                cArrowLeft className="h-5 w-5" />
+              c/Button
+            )}
+          c/div
+        c/div
+      )}
       {/* Sidebar */}
       <div className="w-64 border-r border-border">
         <div className="p-4 border-b border-border">
