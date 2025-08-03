@@ -41,9 +41,8 @@ class LightningToolsService {
   private developerShare: number = 10 // 10% developer revenue
 
   constructor() {
-    const config = albyConfig.getDeveloperConfig()
-    this.developerAddress = config.address
-    this.developerShare = config.share * 100 // Convert to percentage
+    this.developerAddress = albyConfig.getDeveloperAddress()
+    this.developerShare = albyConfig.getDeveloperShare() * 100 // Convert to percentage
   }
 
   // Initialize connection for a user using their Lightning Address
@@ -88,7 +87,7 @@ class LightningToolsService {
       }
       
       // Check if Bitcoin Connect is available but not ready
-      if (typeof window !== 'undefined' && window.bitcoinConnect) {
+      if (typeof window !== 'undefined' && (window as any).bitcoinConnect) {
         console.log('🔄 Bitcoin Connect detected but provider not ready');
         // Force return true for testing if Bitcoin Connect is available
         this.userConnections.set(userId, {
@@ -107,7 +106,7 @@ class LightningToolsService {
       console.error(`❌ Failed to initialize connection for user ${userId}:`, error);
       
       // Force success for testing if we detect any wallet presence
-      if (typeof window !== 'undefined' && (window.webln || window.bitcoinConnect)) {
+      if (typeof window !== 'undefined' && (window.webln || (window as any).bitcoinConnect)) {
         console.log('🎭 Forcing connection success for testing');
         this.userConnections.set(userId, {
           provider: { simulate: true },
