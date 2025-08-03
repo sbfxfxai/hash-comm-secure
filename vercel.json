@@ -1,10 +1,4 @@
 {
-  "projectSettings": {
-    "devCommand": "npm run dev",
-    "buildCommand": "npm run build",
-    "outputDirectory": "dist",
-    "framework": "vite"
-  },
   "redirects": [
     {
       "source": "/eth",
