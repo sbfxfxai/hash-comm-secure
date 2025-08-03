@@ -8,12 +8,15 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/s
 // Lazy load heavy components
 const Inbox = lazy(() => import('@/components/Inbox').then(m => ({ default: m.Inbox })));
 const ContactManager = lazy(() => import('@/components/ContactManager').then(m => ({ default: m.ContactManager })));
+const ProofOfWorkDemo = lazy(() => import('@/components/ProofOfWorkDemo').then(m => ({ default: m.ProofOfWorkDemo })));
 const IdentityManager = lazy(() => import('@/components/IdentityManager').then(m => ({ default: m.IdentityManager })));
 const MessageComposer = lazy(() => import('@/components/MessageComposer').then(m => ({ default: m.MessageComposer })));
 const P2PNetworkStatus = lazy(() => import('@/components/P2PNetworkStatus').then(m => ({ default: m.P2PNetworkStatus })));
 const AdminDashboard = lazy(() => import('@/components/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
 const PricingPage = lazy(() => import('@/components/PricingPage').then(m => ({ default: m.PricingPage })));
 const UserProfile = lazy(() => import('@/components/UserProfile').then(m => ({ default: m.UserProfile })));
+const TestPage = lazy(() => import('@/components/TestPage').then(m => ({ default: m.TestPage })));
+const AlbyIntegrationTest = lazy(() => import('@/components/AlbyIntegrationTest').then(m => ({ default: m.AlbyIntegrationTest })));
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BitCommButton } from '@/components/ui/bitcomm-button';
 import { Button } from '@/components/ui/button';
@@ -99,13 +102,16 @@ const Index = () => {
             {/* Desktop tabs - hidden on mobile */}
             <div className="hidden md:block mb-8">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-8">
+                <TabsList className="grid w-full grid-cols-10">
                   <TabsTrigger value="inbox">Inbox</TabsTrigger>
                   <TabsTrigger value="contacts">Contacts</TabsTrigger>
                   <TabsTrigger value="network">P2P Network</TabsTrigger>
                   <TabsTrigger value="composer">Compose</TabsTrigger>
+                  <TabsTrigger value="pow">Proof-of-Work</TabsTrigger>
                   <TabsTrigger value="identity">Identity</TabsTrigger>
                   <TabsTrigger value="lightning">Payments</TabsTrigger>
+<TabsTrigger value="test">Test</TabsTrigger>
+<TabsTrigger value="alby">Alby Test</TabsTrigger>
                   <TabsTrigger value="enterprise">Enterprise</TabsTrigger>
                   <TabsTrigger value="profile">Profile</TabsTrigger>
                 </TabsList>
