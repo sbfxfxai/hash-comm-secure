@@ -225,30 +225,25 @@ export function MessageComposer() {
         signature: 'sender-signature-' + Date.now() // In production, use proper cryptographic signature
       };
 
-      // Try to send via P2P network
+      // Send via simple P2P network (local simulation for now)
       try {
         const success = await webrtcP2P.sendMessage(envelope);
-        if (success) {
-          newMessage.delivered = true;
-          console.log('📤 Message sent via P2P network');
-          toast({
-            title: "Message Sent!",
-            description: `Message delivered via P2P network (${pow.computeTime.toFixed(2)}s PoW)`,
-          });
-        } else {
-          newMessage.delivered = false;
-          console.log('📝 No P2P peers available - message stored locally');
-          toast({
-            title: "Message Saved!",
-            description: `Message encrypted and stored locally (${pow.computeTime.toFixed(2)}s PoW). Will send when peers connect.`,
-          });
-        }
+        newMessage.delivered = success;
+        
+        toast({
+          title: success ? "Message Sent!" : "Message Saved!",
+          description: success 
+            ? `Message processed successfully (${pow.computeTime.toFixed(2)}s PoW)`
+            : `Message saved locally (${pow.computeTime.toFixed(2)}s PoW)`,
+        });
+        
+        console.log(success ? '📤 Message processed' : '📝 Message saved locally');
       } catch (p2pError) {
-        console.log('📝 P2P network error - message stored locally:', p2pError);
+        console.log('📝 P2P error - message saved locally:', p2pError);
         newMessage.delivered = false;
         toast({
           title: "Message Saved!",
-          description: `Message encrypted and stored locally (${pow.computeTime.toFixed(2)}s PoW). P2P network unavailable.`,
+          description: `Message saved locally (${pow.computeTime.toFixed(2)}s PoW)`,
         });
       }
 
