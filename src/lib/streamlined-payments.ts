@@ -12,15 +12,18 @@ export interface UserCredits {
   balance: number;
   lastRefill: Date;
   totalSpent: number;
-  freeMessagesRemaining: number;
   subscriptionActive: boolean;
 }
 
 export class StreamlinedPaymentService {
   private static instance: StreamlinedPaymentService;
   private readonly MESSAGE_COST = 10; // sats
-  private readonly FREE_MESSAGES_PER_DAY = 5;
-  private readonly CREDIT_REFILL_AMOUNT = 100; // sats worth of credits
+  private readonly CREDIT_PACKAGES = {
+    small: { sats: 100, price: '$1' },
+    medium: { sats: 500, price: '$5' },
+    large: { sats: 1000, price: '$10' }
+  };
+  private readonly LIGHTNING_ADDRESS = 'payments@bitcomm.eth'; // Your Lightning address
 
   static getInstance(): StreamlinedPaymentService {
     if (!StreamlinedPaymentService.instance) {
@@ -35,10 +38,9 @@ export class StreamlinedPaymentService {
   getUserCredits(): UserCredits {
     const stored = localStorage.getItem('bitcomm-user-credits');
     const defaultCredits: UserCredits = {
-      balance: 0,
+      balance: 100, // Give new users 100 sats to start (10 messages)
       lastRefill: new Date(),
       totalSpent: 0,
-      freeMessagesRemaining: this.FREE_MESSAGES_PER_DAY,
       subscriptionActive: false
     };
 
@@ -48,16 +50,6 @@ export class StreamlinedPaymentService {
     }
 
     const credits = JSON.parse(stored) as UserCredits;
-    
-    // Reset free messages daily
-    const lastRefill = new Date(credits.lastRefill);
-    const now = new Date();
-    if (now.getDate() !== lastRefill.getDate() || now.getMonth() !== lastRefill.getMonth()) {
-      credits.freeMessagesRemaining = this.FREE_MESSAGES_PER_DAY;
-      credits.lastRefill = now;
-      this.saveUserCredits(credits);
-    }
-
     return credits;
   }
 
@@ -74,20 +66,7 @@ export class StreamlinedPaymentService {
   async processPayment(userAddress: string): Promise<PaymentResult> {
     const credits = this.getUserCredits();
 
-    // 1. Try freemium first (free messages)
-    if (credits.freeMessagesRemaining > 0) {
-      credits.freeMessagesRemaining--;
-      this.saveUserCredits(credits);
-      
-      return {
-        success: true,
-        method: 'freemium',
-        transactionId: `free-${Date.now()}`,
-        creditsRemaining: credits.freeMessagesRemaining
-      };
-    }
-
-    // 2. Try subscription if active
+    // 1. Try subscription if active
     if (credits.subscriptionActive) {
       return {
         success: true,
@@ -96,7 +75,7 @@ export class StreamlinedPaymentService {
       };
     }
 
-    // 3. Try credits balance
+    // 2. Try credits balance
     if (credits.balance >= this.MESSAGE_COST) {
       credits.balance -= this.MESSAGE_COST;
       credits.totalSpent += this.MESSAGE_COST;
@@ -110,19 +89,31 @@ export class StreamlinedPaymentService {
       };
     }
 
-    // 4. Show payment options modal (simplified)
-    return this.showPaymentOptions();
-  }
-
-  /**
-   * Show simplified payment options without complex wallet connections
-   */
-  private async showPaymentOptions(): Promise<PaymentResult> {
-    // For now, return a failure that triggers the payment modal
+    // 3. Need to add credits
     return {
       success: false,
       method: 'none',
-      error: 'payment_required'
+      error: 'insufficient_credits'
+    };
+  }
+
+  /**
+   * Generate Lightning address payment for credits
+   */
+  generateLightningAddressPayment(satAmount: number): {
+    lightningAddress: string;
+    amount: number;
+    memo: string;
+    qrCode: string;
+  } {
+    const memo = `BitComm Credits: ${satAmount} sats`;
+    const lightningUrl = `lightning:${this.LIGHTNING_ADDRESS}?amount=${satAmount * 1000}&comment=${encodeURIComponent(memo)}`;
+    
+    return {
+      lightningAddress: this.LIGHTNING_ADDRESS,
+      amount: satAmount,
+      memo,
+      qrCode: lightningUrl
     };
   }
 
@@ -165,23 +156,20 @@ export class StreamlinedPaymentService {
    * Get payment summary for UI
    */
   getPaymentSummary(): {
-    freeMessagesLeft: number;
     creditsBalance: number;
+    messagesRemaining: number;
     totalSpent: number;
     subscriptionActive: boolean;
-    nextFreeRefill: Date;
+    lightningAddress: string;
   } {
     const credits = this.getUserCredits();
-    const nextRefill = new Date();
-    nextRefill.setDate(nextRefill.getDate() + 1);
-    nextRefill.setHours(0, 0, 0, 0);
 
     return {
-      freeMessagesLeft: credits.freeMessagesRemaining,
       creditsBalance: credits.balance,
+      messagesRemaining: Math.floor(credits.balance / this.MESSAGE_COST),
       totalSpent: credits.totalSpent,
       subscriptionActive: credits.subscriptionActive,
-      nextFreeRefill: nextRefill
+      lightningAddress: this.LIGHTNING_ADDRESS
     };
   }
 
@@ -196,12 +184,19 @@ export class StreamlinedPaymentService {
   }
 
   /**
-   * Gift free credits (promotional)
+   * Gift credits (promotional)
    */
   giftCredits(amount: number, reason: string): void {
     const credits = this.getUserCredits();
     credits.balance += amount;
     this.saveUserCredits(credits);
+  }
+
+  /**
+   * Get credit packages for purchase
+   */
+  getCreditPackages() {
+    return this.CREDIT_PACKAGES;
   }
 }
 

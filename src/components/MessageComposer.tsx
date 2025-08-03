@@ -14,6 +14,7 @@ import { webrtcP2P, type MessageEnvelope } from '@/lib/p2p/webrtc-p2p';
 import { streamlinedPayments } from '@/lib/streamlined-payments';
 import QRAddressDisplay from './QRAddressDisplay';
 import QRAddressScanner from './QRAddressScanner';
+import CreditsModal from './CreditsModal';
 import { 
   computeProofOfWork, 
   encryptMessage, 
@@ -78,6 +79,10 @@ export function MessageComposer() {
   const [newContactAddress, setNewContactAddress] = useState('');
   const [newContactPubKey, setNewContactPubKey] = useState('');
   const [showAddContact, setShowAddContact] = useState(false);
+  
+  // Credits management
+  const [showCreditsModal, setShowCreditsModal] = useState(false);
+  const [paymentSummary, setPaymentSummary] = useState(streamlinedPayments.getPaymentSummary());
 
   // Load data from localStorage on component mount
   useEffect(() => {
@@ -164,11 +169,18 @@ export function MessageComposer() {
     const paymentResult = await streamlinedPayments.processPayment(activeIdentity.address);
 
     if (!paymentResult.success) {
+      if (paymentResult.error === 'insufficient_credits') {
+        setShowCreditsModal(true);
+        setIsSending(false);
+        return;
+      }
+      
       toast({
         title: "Payment Required",
-        description: "Please complete a simple payment to continue sending messages",
+        description: "Please add credits to continue sending messages",
         variant: "destructive",
       });
+      setIsSending(false);
       return;
     }
 
@@ -428,20 +440,33 @@ console.error('Message send failed. Error details:', error);
               </div>
             )}
 
-            {/* Lightning Payment Card - 10 sats per message */}
-            <div className="p-4 bg-bitcoin-orange/5 border border-bitcoin-orange/20 rounded-lg space-y-3">
+            {/* Credits Balance Card */}
+            <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Zap className="h-4 w-4 text-bitcoin-orange" />
-                  <span className="text-sm font-medium">Message Fee</span>
+                  <Zap className="h-4 w-4 text-orange-500" />
+                  <span className="text-sm font-medium">Credits Balance</span>
                 </div>
-                <Badge variant="outline" className="text-bitcoin-orange border-bitcoin-orange">
-                  10 sats
-                </Badge>
+                <div className="text-right">
+                  <div className="font-mono font-bold text-orange-600">
+                    {paymentSummary.creditsBalance} sats
+                  </div>
+                  <div className="text-xs text-gray-600">
+                    ~{paymentSummary.messagesRemaining} messages
+                  </div>
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Sending messages costs 10 satoshis via Lightning Network. This helps prevent spam and supports the network.
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">
+                  Messages cost 10 sats each. Add credits via Lightning.
+                </p>
+                <button
+                  onClick={() => setShowCreditsModal(true)}
+                  className="text-xs text-orange-600 hover:text-orange-700 font-medium"
+                >
+                  Add Credits
+                </button>
+              </div>
             </div>
 
             {/* Send Button - Full Width on Mobile */}
@@ -462,7 +487,7 @@ console.error('Message send failed. Error details:', error);
               ) : (
                 <>
                   <Send className="h-4 w-4 mr-2" />
-                  {!activeIdentity ? 'Identity Required' : 'Send Message (10 sats)'}
+                  {!activeIdentity ? 'Identity Required' : `Send Message (${paymentSummary.creditsBalance >= 10 ? '10 sats' : 'Add Credits'})`}
                 </>
               )}
             </BitCommButton>
@@ -664,6 +689,19 @@ console.error('Message send failed. Error details:', error);
           </CardContent>
         </Card>
       </div>
+      
+      {/* Credits Modal */}
+      <CreditsModal
+        isOpen={showCreditsModal}
+        onClose={() => setShowCreditsModal(false)}
+        onCreditsAdded={() => {
+          setPaymentSummary(streamlinedPayments.getPaymentSummary());
+          toast({
+            title: "Credits Updated",
+            description: "Your credit balance has been refreshed",
+          });
+        }}
+      />
     </div>
   );
 }
