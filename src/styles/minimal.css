@@ -1,0 +1,64 @@
+/* Minimal CSS - Only the most essential styles for reducing bundle size */
+/* This file contains the absolute minimum needed for above-the-fold rendering */
+
+@layer critical {
+  /* Essential reset - only what's needed */
+  * {
+    box-sizing: border-box;
+    border: 0 solid hsl(214.3 31.8% 91.4%);
+  }
+
+  html {
+    line-height: 1.5;
+    font-family: system-ui, sans-serif;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: hsl(0 0% 100%);
+    color: hsl(222.2 84% 4.9%);
+  }
+
+  /* Critical CSS variables - only most essential */
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --primary: 29 78% 51%;
+    --bitcoin-orange: 29 78% 51%;
+    --border: 214.3 31.8% 91.4%;
+    --muted: 210 40% 96.1%;
+  }
+
+  /* Above-the-fold layout only */
+  .min-h-screen { min-height: 100vh; }
+  .bg-background { background: hsl(var(--background)); }
+  .text-foreground { color: hsl(var(--foreground)); }
+  .flex { display: flex; }
+  .items-center { align-items: center; }
+  .justify-between { justify-content: space-between; }
+  .gap-2 { gap: 0.5rem; }
+  .p-4 { padding: 1rem; }
+  .px-4 { padding-left: 1rem; padding-right: 1rem; }
+  .border-b { border-bottom-width: 1px; }
+  .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+  .font-bold { font-weight: 700; }
+  .h-6 { height: 1.5rem; }
+  .w-6 { width: 1.5rem; }
+  .h-8 { height: 2rem; }
+  .w-8 { width: 2rem; }
+  .h-16 { height: 4rem; }
+  .text-bitcoin-orange { color: hsl(var(--bitcoin-orange)); }
+  .ml-auto { margin-left: auto; }
+  .flex-1 { flex: 1 1 0%; }
+  .relative { position: relative; }
+  .rounded-full { border-radius: 9999px; }
+  .bg-muted { background: hsl(var(--muted)); }
+  .animate-pulse { animation: pulse 2s infinite; }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .5; }
+  }
+}

@@ -21,46 +21,15 @@ export default defineConfig(({ mode }) => ({
   build: {
     // Target modern browsers for smaller bundles
     target: 'es2020',
-    // Code splitting optimizations
+    // Use default chunking with basic optimizations
     rollupOptions: {
       output: {
-        // Advanced chunking strategy
-        manualChunks(id) {
-          // Vendor chunk for core React ecosystem
-          if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-              return 'vendor';
-            }
-            // Crypto libraries
-            if (id.includes('crypto-js') || id.includes('bitcoin') || id.includes('lightning')) {
-              return 'crypto';
-            }
-            // P2P networking
-            if (id.includes('libp2p') || id.includes('webrtc') || id.includes('kad-dht')) {
-              return 'p2p';
-            }
-            // UI component libraries
-            if (id.includes('@radix-ui') || id.includes('lucide-react') || id.includes('recharts')) {
-              return 'ui';
-            }
-            // Charts and visualization
-            if (id.includes('recharts') || id.includes('date-fns')) {
-              return 'charts';
-            }
-            // QR and scanning libraries
-            if (id.includes('qr') || id.includes('scanner')) {
-              return 'qr';
-            }
-            // All other node_modules
-            return 'vendor-misc';
-          }
-        },
-        // Optimize chunk names and sizes
-        chunkFileNames: (chunkInfo) => {
-          const facadeModuleId = chunkInfo.facadeModuleId
-            ? chunkInfo.facadeModuleId.split('/').pop().replace('.tsx', '').replace('.ts', '')
-            : 'chunk';
-          return `${facadeModuleId}-[hash].js`;
+        // Only split the largest dependencies to reduce main bundle size
+        manualChunks: {
+          // Split React into its own chunk for better caching
+          'react-vendor': ['react', 'react-dom'],
+          // Split large UI libraries
+          'ui-vendor': ['lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
         }
       }
     },
@@ -105,6 +74,8 @@ export default defineConfig(({ mode }) => ({
   },
   // CSS optimization
   css: {
-    devSourcemap: mode === 'development'
+    devSourcemap: mode === 'development',
+    // CSS minification handled by build process
+    // Tailwind purging handles unused CSS removal automatically
   }
 }));

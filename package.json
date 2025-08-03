@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "purge:css": "purgecss --config purgecss.config.js -o ./dist/assets",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
@@ -100,6 +101,7 @@
     "@vitejs/plugin-react-swc": "^3.5.0",
     "@vitest/ui": "^3.2.4",
     "autoprefixer": "^10.4.20",
+    "cssnano": "^7.1.0",
     "cypress": "^14.5.3",
     "eslint": "^9.9.0",
     "eslint-plugin-no-unsanitized": "^4.1.2",
@@ -117,6 +119,7 @@
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
     "vite": "^5.4.1",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "webpack-bundle-analyzer": "^4.10.2"
   }
 }

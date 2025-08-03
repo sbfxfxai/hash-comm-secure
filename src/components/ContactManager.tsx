@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, memo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -223,7 +223,8 @@ const categories = [
   'other'
 ];
 
-export const ContactManager: React.FC = () => {
+// Memoized ContactManager component to prevent unnecessary re-renders
+export const ContactManager: React.FC = memo(() => {
   const [contacts, setContacts] = useState<Contact[]>(mockContacts);
   const [groups, setGroups] = useState<ContactGroup[]>(mockGroups);
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
@@ -1074,4 +1075,7 @@ export const ContactManager: React.FC = () => {
       </Dialog>
     </div>
   );
-};
+});
+
+// Set display name for debugging
+ContactManager.displayName = 'ContactManager';

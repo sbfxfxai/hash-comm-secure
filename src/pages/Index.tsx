@@ -1,11 +1,11 @@
-import { Suspense, lazy, useState } from 'react';
+import { Suspense, lazy, useState, useEffect } from 'react';
 import { AuthModal } from '@/components/AuthModal';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AppSidebar } from '@/components/AppSidebar';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 
-// Lazy load heavy components with preloading hints
+// Lazy load heavy components with preloading hints - only load when tab is accessed
 const Inbox = lazy(() => import(/* webpackChunkName: "inbox" */ '@/components/Inbox').then(m => ({ default: m.Inbox })));
 const ContactManager = lazy(() => import(/* webpackChunkName: "contacts" */ '@/components/ContactManager').then(m => ({ default: m.ContactManager })));
 const IdentityManager = lazy(() => import(/* webpackChunkName: "identity" */ '@/components/IdentityManager').then(m => ({ default: m.IdentityManager })));
@@ -14,6 +14,11 @@ const P2PNetworkStatus = lazy(() => import(/* webpackChunkName: "p2p" */ '@/comp
 const AdminDashboard = lazy(() => import(/* webpackChunkName: "admin" */ '@/components/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
 const PricingPage = lazy(() => import(/* webpackChunkName: "pricing" */ '@/components/PricingPage').then(m => ({ default: m.PricingPage })));
 const UserProfile = lazy(() => import(/* webpackChunkName: "profile" */ '@/components/UserProfile').then(m => ({ default: m.UserProfile })));
+
+// Additional lazy loaded components
+const TestPage = lazy(() => import(/* webpackChunkName: "test" */ '@/components/TestPage'));
+const ProofOfWorkDemo = lazy(() => import(/* webpackChunkName: "pow" */ '@/components/ProofOfWorkDemo'));
+const AlbyIntegrationTest = lazy(() => import(/* webpackChunkName: "alby" */ '@/components/AlbyIntegrationTest'));
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BitCommButton } from '@/components/ui/bitcomm-button';
 import { Button } from '@/components/ui/button';
@@ -35,9 +40,61 @@ const ComponentSkeleton = () => (
   </div>
 );
 
+// Smart preloading hook - preloads next likely components
+const useSmartPreload = (activeTab: string, isAuthenticated: boolean) => {
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    
+    // Preload likely next tabs with idle callback - only preload existing components
+    const preloadNext = async () => {
+      const safeImport = (componentPath: string) => {
+        return import(componentPath).catch(() => null);
+      };
+      
+      const preloadMap: Record<string, string[]> = {
+        'inbox': [
+          '@/components/ContactManager',
+          '@/components/MessageComposer'
+        ],
+        'contacts': [
+          '@/components/MessageComposer',
+          '@/components/Inbox'
+        ],
+        'composer': [
+          '@/components/ContactManager',
+          '@/components/Inbox'
+        ],
+        'identity': [
+          '@/components/UserProfile'
+        ],
+        'lightning': [
+          '@/components/ContactManager'
+        ]
+      };
+      
+      const componentPaths = preloadMap[activeTab];
+      if (componentPaths) {
+        // Preload components in background without blocking
+        componentPaths.forEach(path => {
+          safeImport(path);
+        });
+      }
+    };
+    
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(preloadNext, { timeout: 3000 });
+    } else {
+      setTimeout(preloadNext, 1000);
+    }
+  }, [activeTab, isAuthenticated]);
+};
+
 const Index = () => {
   const { user, signOut, loading, isAuthenticated } = useAuth()
   const [activeTab, setActiveTab] = useState("inbox")
+  
+  // Smart preloading based on current tab and auth status
+  useSmartPreload(activeTab, isAuthenticated);
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab)

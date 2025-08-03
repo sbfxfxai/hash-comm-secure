@@ -4,6 +4,7 @@ import App from './App.tsx'
 import { AuthProvider } from './contexts/AuthContext'
 import './index.css'
 import { perfMonitor } from './utils/performance'
+import { cssLoader } from './utils/cssLoader'
 
 // Make React globally available for UI components
 ;(window as any).React = React
@@ -32,9 +33,24 @@ const scheduleIdleTask = (callback: () => void, timeout = 2000) => {
   }
 };
 
+// Schedule tasks for after initial render
 scheduleIdleTask(() => {
   loadCryptoFunctions().catch(console.error);
 });
+
+// Preload critical component styles after initial render
+scheduleIdleTask(() => {
+  cssLoader.loadCriticalComponentStyles().catch(console.error);
+}, 1000);
+
+// Analyze and report unused CSS in development
+if (import.meta.env.DEV) {
+  scheduleIdleTask(() => {
+    const usedClasses = cssLoader.analyzeUsedClasses();
+    console.log('CSS Analysis - Used Classes:', usedClasses.size);
+    console.log('Used classes:', Array.from(usedClasses).slice(0, 20), '...');
+  }, 3000);
+}
 
 createRoot(document.getElementById("root")!).render(
   <AuthProvider>
