@@ -16,6 +16,7 @@ const AdminDashboard = lazy(() => import('@/components/AdminDashboard').then(m =
 const PricingPage = lazy(() => import('@/components/PricingPage').then(m => ({ default: m.PricingPage })));
 const UserProfile = lazy(() => import('@/components/UserProfile').then(m => ({ default: m.UserProfile })));
 const TestPage = lazy(() => import('@/components/TestPage').then(m => ({ default: m.TestPage })));
+const AlbyIntegrationTest = lazy(() => import('@/components/AlbyIntegrationTest').then(m => ({ default: m.AlbyIntegrationTest })));
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BitCommButton } from '@/components/ui/bitcomm-button';
 import { Button } from '@/components/ui/button';
@@ -109,7 +110,8 @@ const Index = () => {
                   <TabsTrigger value="pow">Proof-of-Work</TabsTrigger>
                   <TabsTrigger value="identity">Identity</TabsTrigger>
                   <TabsTrigger value="lightning">Payments</TabsTrigger>
-                  <TabsTrigger value="test">Test</TabsTrigger>
+<TabsTrigger value="test">Test</TabsTrigger>
+<TabsTrigger value="alby">Alby Test</TabsTrigger>
                   <TabsTrigger value="enterprise">Enterprise</TabsTrigger>
                   <TabsTrigger value="profile">Profile</TabsTrigger>
                 </TabsList>
@@ -241,6 +243,20 @@ const Index = () => {
               <div className="space-y-6">
                 <Suspense fallback={<ComponentSkeleton />}>
                   <TestPage />
+                </Suspense>
+              </div>
+            )}
+
+            {activeTab === "alby" && (
+              <div className="space-y-6">
+                <div className="text-center mb-8">
+                  <h2 className="text-3xl font-bold mb-4">Alby Lightning Integration Test</h2>
+                  <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                    Comprehensive testing suite for all Alby Lightning Network features and modern NWC patterns.
+                  </p>
+                </div>
+                <Suspense fallback={<ComponentSkeleton />}>
+                  <AlbyIntegrationTest />
                 </Suspense>
               </div>
             )}

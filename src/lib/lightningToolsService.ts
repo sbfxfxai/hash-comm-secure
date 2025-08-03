@@ -41,7 +41,9 @@ class LightningToolsService {
   private developerShare: number = 10 // 10% developer revenue
 
   constructor() {
-    this.developerAddress = process.env.VITE_DEVELOPER_BITCOIN_ADDRESS || 'excitementresourceful193152@getalby.com'
+    const config = albyConfig.getDeveloperConfig()
+    this.developerAddress = config.address
+    this.developerShare = config.share * 100 // Convert to percentage
   }
 
   // Initialize connection for a user using their Lightning Address

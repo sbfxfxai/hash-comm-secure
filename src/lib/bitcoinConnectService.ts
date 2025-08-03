@@ -13,6 +13,7 @@ import {
 import { LightningAddress, fiat } from '@getalby/lightning-tools'
 import { nwcConnectionManager, type WalletConnection } from './nwc/connection-manager'
 import { clientSecretManager } from './nwc/client-secret'
+import { albyConfig } from './albyConfig'
 
 export interface BitcoinConnectConfig {
   appName: string
@@ -40,10 +41,11 @@ class BitcoinConnectService {
   private nwcConnection: WalletConnection | null = null
 
   constructor() {
+    const albyConf = albyConfig.getConfig()
     this.config = {
-      appName: 'BitComm - Decentralized Communication',
-      developerShare: 10, // 10% developer revenue
-      developerAddress: process.env.VITE_DEVELOPER_BITCOIN_ADDRESS || 'excitementresourceful193152@getalby.com'
+      appName: albyConf.appName,
+      developerShare: albyConf.developerShare * 100, // Convert to percentage
+      developerAddress: albyConf.developerAddress
     }
   }
 
@@ -55,11 +57,11 @@ class BitcoinConnectService {
       // Initialize NWC connection manager
       await nwcConnectionManager.initialize()
       
-      // Initialize Bitcoin Connect with NWC focus
+      // Initialize Bitcoin Connect with optimized Alby configuration
       init({
         appName: this.config.appName,
         showBalance: true,
-        filters: ['nwc'], // Focus on NWC connections for modern flow
+        filters: ['nwc'], // Focus on modern NWC connections
       })
 
       // Set up connection events
