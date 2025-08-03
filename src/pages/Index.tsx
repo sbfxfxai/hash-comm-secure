@@ -15,6 +15,7 @@ const P2PNetworkStatus = lazy(() => import('@/components/P2PNetworkStatus').then
 const AdminDashboard = lazy(() => import('@/components/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
 const PricingPage = lazy(() => import('@/components/PricingPage').then(m => ({ default: m.PricingPage })));
 const UserProfile = lazy(() => import('@/components/UserProfile').then(m => ({ default: m.UserProfile })));
+const TestPage = lazy(() => import('@/components/TestPage').then(m => ({ default: m.TestPage })));
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BitCommButton } from '@/components/ui/bitcomm-button';
 import { Button } from '@/components/ui/button';
@@ -100,7 +101,7 @@ const Index = () => {
             {/* Desktop tabs - hidden on mobile */}
             <div className="hidden md:block mb-8">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-9">
+                <TabsList className="grid w-full grid-cols-10">
                   <TabsTrigger value="inbox">Inbox</TabsTrigger>
                   <TabsTrigger value="contacts">Contacts</TabsTrigger>
                   <TabsTrigger value="network">P2P Network</TabsTrigger>
@@ -108,6 +109,7 @@ const Index = () => {
                   <TabsTrigger value="pow">Proof-of-Work</TabsTrigger>
                   <TabsTrigger value="identity">Identity</TabsTrigger>
                   <TabsTrigger value="lightning">Payments</TabsTrigger>
+                  <TabsTrigger value="test">Test</TabsTrigger>
                   <TabsTrigger value="enterprise">Enterprise</TabsTrigger>
                   <TabsTrigger value="profile">Profile</TabsTrigger>
                 </TabsList>
@@ -232,6 +234,14 @@ const Index = () => {
                     <PaymentHistory />
                   </div>
                 </ProtectedRoute>
+              </div>
+            )}
+
+            {activeTab === "test" && (
+              <div className="space-y-6">
+                <Suspense fallback={<ComponentSkeleton />}>
+                  <TestPage />
+                </Suspense>
               </div>
             )}
 
