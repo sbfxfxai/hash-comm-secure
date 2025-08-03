@@ -146,7 +146,7 @@ const mockServices = {
     }
 };
 
-export function MessageComposer() {
+export default function App() {
     const { toast } = useToast();
 
     // State management
@@ -869,3 +869,6 @@ export function MessageComposer() {
         </div>
     );
 }
+
+// Export the component as both default and named export for compatibility
+export { App as MessageComposer };
