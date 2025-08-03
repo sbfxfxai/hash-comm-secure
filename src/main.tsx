@@ -58,16 +58,35 @@ createRoot(document.getElementById("root")!).render(
   </AuthProvider>
 );
 
-// Service worker temporarily disabled due to JS module loading issues
-// TODO: Re-enable after fixing service worker fetch logic
-// if ('serviceWorker' in navigator) {
-//   window.addEventListener('load', () => {
-//     navigator.serviceWorker.register('/sw.js')
-//       .then((registration) => {
-//         console.log('SW registered: ', registration);
-//       })
-//       .catch((registrationError) => {
-//         console.log('SW registration failed: ', registrationError);
-//       });
-//   });
-// }
+// Force unregister any existing service workers and clear caches
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    try {
+      // Unregister all service workers
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const registration of registrations) {
+        console.log('Unregistering service worker:', registration);
+        await registration.unregister();
+      }
+      
+      // Clear all caches
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        for (const cacheName of cacheNames) {
+          console.log('Deleting cache:', cacheName);
+          await caches.delete(cacheName);
+        }
+      }
+      
+      console.log('All service workers unregistered and caches cleared');
+      
+      // Force reload if there were active service workers
+      if (registrations.length > 0) {
+        console.log('Reloading page to ensure clean state...');
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Error clearing service workers and caches:', error);
+    }
+  });
+}
