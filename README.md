@@ -143,7 +143,7 @@ BitComm is built with a modern, scalable architecture:
 
 ## 📊 Project Status
 
-### Current Version: 1.0.0
+### Current Version: 1.0.0 - Stable
 
 - ✅ Core messaging functionality
 - ✅ Identity management system
