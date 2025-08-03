@@ -11,6 +11,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { PaywallCard } from '@/components/P2PPaymentComponents';
 import { lightningTools } from '@/lib/lightningToolsService';
 import { webrtcP2P, type MessageEnvelope } from '@/lib/p2p/webrtc-p2p';
+import QRAddressDisplay from './QRAddressDisplay';
+import QRAddressScanner from './QRAddressScanner';
 import { 
   computeProofOfWork, 
   encryptMessage, 
@@ -313,6 +315,19 @@ console.error('Message send failed. Error details:', error);
           
           
           <CardContent className="space-y-6">
+            {/* QR Code Display */}
+            <div className="space-y-4">
+              <QRAddressDisplay className="mb-6" />
+            </div>
+
+            {/* QR Code Scanner */}
+            <div className="space-y-4">
+              <QRAddressScanner 
+                onScanComplete={(addressInfo) => setRecipient(addressInfo.address)} 
+                className="mb-6"
+              />
+            </div>
+
             {/* Recipient Section - Mobile Optimized */}
             <div className="space-y-3">
               <Label htmlFor="recipient" className="text-sm font-medium">Recipient Address</Label>
