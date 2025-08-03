@@ -300,20 +300,49 @@ console.error('Error loading identities from localStorage:', error);
                       </Badge>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Bitcoin className="h-4 w-4 text-bitcoin-orange" />
-                    <code className="text-sm text-muted-foreground">
-                      {formatAddress(identity.address)}
-                    </code>
-                    <BitCommButton
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => copyToClipboard(identity.address, 'Bitcoin Address')}
-                      className="h-6 w-6 p-0"
-                    >
-                      <Copy className="h-3 w-3" />
-                    </BitCommButton>
+                  <div className="space-y-2 mt-1">
+                    <div className="flex items-center gap-2">
+                      <Bitcoin className="h-4 w-4 text-bitcoin-orange" />
+                      <span className="text-xs text-muted-foreground font-medium">Messaging Address:</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-muted/30 p-2 rounded border">
+                      <code className="text-sm font-mono flex-1">
+                        {identity.address}
+                      </code>
+                      <BitCommButton
+                        variant="outline"
+                        size="sm"
+                        onClick={() => copyToClipboard(identity.address, 'Messaging Address')}
+                        className="h-8 px-3 text-xs"
+                      >
+                        <Copy className="h-3 w-3 mr-1" />
+                        Copy
+                      </BitCommButton>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Share this address with others to receive messages
+                    </p>
                   </div>
+                </div>
+                <div className="flex flex-col items-end gap-2">
+                  	{!identity.isActive && (
+                    <BitCommButton
+                      variant="default"
+                      size="sm"
+                      onClick={() => setActiveIdentity(identity.address)}
+                      className="w-full"
+                    >
+                      Activate
+                    </BitCommButton>
+                  )}
+                  <BitCommButton
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => deleteIdentity(identity.address)}
+                    className="w-full text-red-600"
+                  >
+                    Delete
+                  </BitCommButton>
                 </div>
               </div>
             ))}

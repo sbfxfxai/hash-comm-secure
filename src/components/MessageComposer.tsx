@@ -10,6 +10,7 @@ import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PaywallCard } from '@/components/P2PPaymentComponents';
 import { lightningTools } from '@/lib/lightningToolsService';
+import { webrtcP2P, type MessageEnvelope } from '@/lib/p2p/webrtc-p2p';
 import { 
   computeProofOfWork, 
   encryptMessage, 
@@ -219,7 +220,47 @@ export function MessageComposer() {
         delivered: false
       };
 
-      // Store sent message
+      // Create message envelope for P2P network
+      const envelope: MessageEnvelope = {
+        id: newMessage.id,
+        message: newMessage,
+        timestamp: Date.now(),
+        signature: 'sender-signature-' + Date.now() // In production, use proper cryptographic signature
+      };
+
+      // Send message through P2P network
+      console.log('📡 Sending message through P2P network...');
+      try {
+        const p2pSent = await webrtcP2P.sendMessage(envelope);
+        
+        if (p2pSent) {
+          newMessage.delivered = true;
+          console.log('✅ Message successfully sent through P2P network');
+          
+          toast({
+            title: "Message Sent!",
+            description: `Encrypted message delivered via P2P network (${pow.computeTime.toFixed(2)}s PoW)`,
+          });
+        } else {
+          console.log('⚠️ P2P network unavailable, message queued locally');
+          
+          toast({
+            title: "Message Queued",
+            description: "P2P network unavailable. Message will be sent when peers connect.",
+            variant: "default",
+          });
+        }
+      } catch (p2pError) {
+        console.error('P2P send failed:', p2pError);
+        
+        toast({
+          title: "P2P Send Failed",
+          description: "Message saved locally but could not be sent to network",
+          variant: "destructive",
+        });
+      }
+
+      // Store sent message locally
       const updatedMessages = [newMessage, ...sentMessages];
       setSentMessages(updatedMessages);
       localStorage.setItem('bitcomm-sent-messages', JSON.stringify(updatedMessages));
@@ -230,11 +271,6 @@ export function MessageComposer() {
       setSelectedContact(null);
       setPowProgress(0);
       setPowStats(null);
-
-      toast({
-        title: "Message Sent!",
-        description: `Encrypted message delivered with PoW (${pow.computeTime.toFixed(2)}s)`,
-      });
 
     } catch (error) {
 console.error('Message send failed. Error details:', error);

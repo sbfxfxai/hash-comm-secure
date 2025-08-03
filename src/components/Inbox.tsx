@@ -36,6 +36,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { webrtcP2P, type MessageEnvelope } from '@/lib/p2p/webrtc-p2p';
+import { decryptMessage } from '@/lib/bitcomm';
 
 // Types for inbox functionality
 interface Message {
@@ -215,6 +217,86 @@ export const Inbox: React.FC = () => {
   
   const { user } = useAuth();
   const { toast } = useToast();
+
+  // Handle P2P messages
+  useEffect(() => {
+    const handleP2PMessage = (envelope: MessageEnvelope) => {
+      console.log('📨 Received P2P message:', envelope);
+      
+      // Convert P2P message to Inbox message format
+      const inboxMessage: Message = {
+        id: envelope.message.id,
+        from: {
+          did: envelope.message.from,
+          displayName: envelope.message.from.substring(0, 12) + '...',
+          avatar: undefined
+        },
+        to: [envelope.message.to],
+        subject: 'P2P Message', // BitComm messages don't have subjects, use default
+        content: envelope.message.content,
+        timestamp: envelope.message.timestamp,
+        isRead: false,
+        isStarred: false,
+        isArchived: false,
+        hasAttachments: false,
+        priority: 'normal',
+        category: 'inbox',
+        proofOfWork: {
+          difficulty: envelope.message.pow.difficulty,
+          hash: envelope.message.pow.hash,
+          verified: true
+        }
+      };
+
+      // Add to messages list
+      setMessages(prev => [inboxMessage, ...prev]);
+      
+      toast({
+        title: "New P2P Message!",
+        description: `Message from ${envelope.message.from.substring(0, 16)}...`,
+      });
+    };
+
+    // Add P2P message handler
+    webrtcP2P.addMessageHandler(handleP2PMessage);
+
+    // Load existing P2P messages from localStorage
+    const storedP2PMessages = localStorage.getItem('bitcomm-received-messages');
+    if (storedP2PMessages) {
+      const p2pMessages = JSON.parse(storedP2PMessages);
+      // Convert and add P2P messages to inbox
+      const convertedMessages = p2pMessages.map((envelope: MessageEnvelope) => ({
+        id: envelope.message.id,
+        from: {
+          did: envelope.message.from,
+          displayName: envelope.message.from.substring(0, 12) + '...',
+          avatar: undefined
+        },
+        to: [envelope.message.to],
+        subject: 'P2P Message',
+        content: envelope.message.content,
+        timestamp: envelope.message.timestamp,
+        isRead: true, // Mark stored messages as read
+        isStarred: false,
+        isArchived: false,
+        hasAttachments: false,
+        priority: 'normal',
+        category: 'inbox',
+        proofOfWork: {
+          difficulty: envelope.message.pow.difficulty,
+          hash: envelope.message.pow.hash,
+          verified: true
+        }
+      }));
+      
+      setMessages(prev => [...convertedMessages, ...prev]);
+    }
+
+    // Cleanup function
+    return () => {
+      webrtcP2P.removeMessageHandler(handleP2PMessage);
+    };
+  }, [toast]);
 
   // Filter messages based on selected folder and search
   const filteredMessages = messages.filter(message => {
