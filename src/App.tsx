@@ -4,6 +4,25 @@ import { AppSidebar } from '@/components/AppSidebar';
 import { Separator } from '@/components/ui/separator';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 
+// Import Lucide React icons
+import {
+    Send,
+    Mail,
+    Lock,
+    Clock,
+    CheckCircle,
+    AlertCircle,
+    Cpu,
+    Hash,
+    Shield,
+    User,
+    Zap,
+    QrCode,
+    Plus,
+    X,
+    Camera
+} from 'lucide-react';
+
 // Import all your components
 import { Inbox } from '@/components/Inbox';
 import { ContactManager } from '@/components/ContactManager';
