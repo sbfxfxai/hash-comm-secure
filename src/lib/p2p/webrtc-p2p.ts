@@ -26,46 +26,14 @@ export class WebRTCP2PNetwork {
   private isInitialized = false;
   private localPeerId: string = '';
   private bitcommAddress: string = '';
-  private dhtNode: any; // Placeholder for DHT node library
+  private signalingSocket: WebSocket | null = null;
   private messageQueue: Map<string, MessageEnvelope[]> = new Map();
+  private peerDiscoveryCallback: ((peer: any) => void) | null = null;
+  private registrationComplete = false;
 
   constructor() {
-    // Initialize DHT node for decentralized peer discovery
-    this.dhtNode = this.initializeDHTNode();
-
-    // Auto reconnect settings
+    // Set up reconnection logic
     this.setupReconnection();
-  }
-
-  private initializeDHTNode() {
-    // Production DHT node - connects to real signaling server
-    const signalingUrl = process.env.VITE_SIGNALING_SERVER_URL || 'wss://bitcomm-signaling.herokuapp.com';
-    
-    return {
-      signalingSocket: null as WebSocket | null,
-      start: async () => {
-        console.log('🚀 Connecting to production signaling server:', signalingUrl);
-        this.dhtNode.signalingSocket = new WebSocket(signalingUrl);
-        
-        this.dhtNode.signalingSocket.onopen = () => {
-          console.log('✅ Connected to signaling server');
-        };
-        
-        this.dhtNode.signalingSocket.onmessage = (event) => {
-          this.handleSignalingMessage(JSON.parse(event.data));
-        };
-        
-        this.dhtNode.signalingSocket.onerror = (error) => {
-          console.error('❌ Signaling server connection error:', error);
-        };
-      },
-      on: (event: string, callback: (peer: any) => void) => {
-        // Real peer discovery through signaling server
-        if (event === 'peer:discover') {
-          this.peerDiscoveryCallback = callback;
-        }
-      }
-    };
   }
 
   async initialize(bitcommAddress: string): Promise<P2PNode> {
@@ -73,17 +41,8 @@ export class WebRTCP2PNetwork {
     
     this.bitcommAddress = bitcommAddress;
     
-    // Register with signaling server
-    if (this.dhtNode.signalingSocket && this.dhtNode.signalingSocket.readyState === WebSocket.OPEN) {
-      this.dhtNode.signalingSocket.send(JSON.stringify({
-        type: 'register',
-        bitcommAddress: bitcommAddress
-      }));
-    }
-
-    // Use production signaling for peer discovery
-    await this.dhtNode.start();
-    console.log('✅ Connected to production signaling server');
+    // Connect to signaling server
+    await this.connectToSignalingServer();
     
     this.isInitialized = true;
     
@@ -97,6 +56,42 @@ export class WebRTCP2PNetwork {
     return p2pNode;
   }
 
+  private async connectToSignalingServer(): Promise<void> {
+    const signalingUrl = process.env.VITE_SIGNALING_SERVER_URL || 'wss://bitcomm-signaling.herokuapp.com';
+    
+    return new Promise((resolve, reject) => {
+      console.log('🚀 Connecting to production signaling server:', signalingUrl);
+      
+      this.signalingSocket = new WebSocket(signalingUrl);
+      
+      this.signalingSocket.onopen = () => {
+        console.log('✅ Connected to signaling server');
+        
+        // Register with BitComm address
+        this.signalingSocket?.send(JSON.stringify({
+          type: 'register',
+          bitcommAddress: this.bitcommAddress
+        }));
+        
+        resolve();
+      };
+      
+      this.signalingSocket.onmessage = (event) => {
+        this.handleSignalingMessage(JSON.parse(event.data));
+      };
+      
+      this.signalingSocket.onerror = (error) => {
+        console.error('❌ Signaling server connection error:', error);
+        reject(error);
+      };
+      
+      this.signalingSocket.onclose = () => {
+        console.log('⚠️ Signaling server disconnected, attempting reconnect...');
+        setTimeout(() => this.connectToSignalingServer(), 5000);
+      };
+    });
+  }
+
 
 
   private handleSignalingMessage(message: SignalingMessage): void {
@@ -108,11 +103,18 @@ export class WebRTCP2PNetwork {
       
       case 'registered':
         console.log('✅ Registered with BitComm address:', message.bitcommAddress);
+        this.registrationComplete = true;
+        // Start looking for peers immediately after registration
+        setTimeout(() => this.discoverPeers(), 1000);
         break;
       
       case 'peers-found':
         console.log('👥 Found peers:', message.peers);
-        this.initiateConnections(message.peers);
+        if (message.peers && message.peers.length > 0) {
+          this.initiateConnections(message.peers);
+        } else {
+          console.log('No peers found for this address yet');
+        }
         break;
       
       case 'offer':
@@ -133,20 +135,143 @@ export class WebRTCP2PNetwork {
   }
 
   private async createPeerConnection(remotePeerId: string): Promise<void> {
-    // WebRTC connection creation logic
     console.log('Creating connection to:', remotePeerId);
-  }
-
-  private handleWebRTCSignaling(message: SignalingMessage): void {
-    // Handle WebRTC signaling messages
-    console.log('Handling WebRTC signaling:', message.type);
-  }
-
-private setupReconnection(): void {
-    this.dhtNode.on('peer:discover', (peer) => {
-      console.log('Discovered new peer via DHT:', peer);
-      this.initiateConnections([peer]);
+    
+    if (this.connections.has(remotePeerId)) {
+      console.log('Already connected to:', remotePeerId);
+      return;
+    }
+    
+    const peerConnection = new RTCPeerConnection({
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' }
+      ]
     });
+    
+    peerConnection.onicecandidate = ({ candidate }) => {
+      if (candidate) {
+        this.signalingSocket?.send(JSON.stringify({
+          type: 'ice-candidate',
+          targetPeerId: remotePeerId,
+          candidate
+        }));
+      }
+    };
+    
+    peerConnection.ondatachannel = ({ channel }) => {
+      channel.onmessage = (event) => {
+        this.handleIncomingMessage(event.data, remotePeerId);
+      };
+    };
+
+    const dataChannel = peerConnection.createDataChannel('bitcomm', { ordered: true });
+    dataChannel.onopen = () => {
+      console.log('Data channel open with peer:', remotePeerId);
+    };
+
+    this.connections.set(remotePeerId, peerConnection);
+    this.dataChannels.set(remotePeerId, dataChannel);
+
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+
+    this.signalingSocket?.send(JSON.stringify({
+      type: 'offer',
+      offer,
+      targetPeerId: remotePeerId
+    }));
+  }
+
+  private async handleWebRTCSignaling(message: SignalingMessage): Promise<void> {
+    const { fromPeerId, type } = message;
+    
+    switch (type) {
+      case 'offer':
+        await this.handleOffer(fromPeerId, message.offer);
+        break;
+      case 'answer':
+        await this.handleAnswer(fromPeerId, message.answer);
+        break;
+      case 'ice-candidate':
+        await this.handleIceCandidate(fromPeerId, message.candidate);
+        break;
+    }
+  }
+
+  private async handleOffer(fromPeerId: string, offer: RTCSessionDescriptionInit): Promise<void> {
+    const peerConnection = new RTCPeerConnection({
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' }
+      ]
+    });
+
+    peerConnection.onicecandidate = ({ candidate }) => {
+      if (candidate) {
+        this.signalingSocket?.send(JSON.stringify({
+          type: 'ice-candidate',
+          targetPeerId: fromPeerId,
+          candidate
+        }));
+      }
+    };
+
+    peerConnection.ondatachannel = ({ channel }) => {
+      channel.onopen = () => {
+        console.log('Data channel opened with peer:', fromPeerId);
+        this.dataChannels.set(fromPeerId, channel);
+        this.processQueuedMessages(fromPeerId);
+      };
+      channel.onmessage = (event) => {
+        this.handleIncomingMessage(event.data, fromPeerId);
+      };
+    };
+
+    this.connections.set(fromPeerId, peerConnection);
+    await peerConnection.setRemoteDescription(offer);
+    const answer = await peerConnection.createAnswer();
+    await peerConnection.setLocalDescription(answer);
+
+    this.signalingSocket?.send(JSON.stringify({
+      type: 'answer',
+      answer,
+      targetPeerId: fromPeerId
+    }));
+  }
+
+  private async handleAnswer(fromPeerId: string, answer: RTCSessionDescriptionInit): Promise<void> {
+    const peerConnection = this.connections.get(fromPeerId);
+    if (peerConnection) {
+      await peerConnection.setRemoteDescription(answer);
+      console.log('Answer set for peer:', fromPeerId);
+    }
+  }
+
+  private async handleIceCandidate(fromPeerId: string, candidate: RTCIceCandidate): Promise<void> {
+    const peerConnection = this.connections.get(fromPeerId);
+    if (peerConnection) {
+      await peerConnection.addIceCandidate(candidate);
+      console.log('ICE candidate added for peer:', fromPeerId);
+    }
+  }
+
+  private setupReconnection(): void {
+    // Set up periodic peer discovery
+    setInterval(() => {
+      if (this.isInitialized && this.registrationComplete) {
+        this.discoverPeers();
+      }
+    }, 30000); // Check for peers every 30 seconds
+  }
+
+  private discoverPeers(): void {
+    if (this.signalingSocket && this.signalingSocket.readyState === WebSocket.OPEN) {
+      this.signalingSocket.send(JSON.stringify({
+        type: 'find-peers',
+        targetAddress: this.bitcommAddress
+      }));
+    }
   }
 
   private queueMessage(targetPeerId: string, envelope: MessageEnvelope): void {
