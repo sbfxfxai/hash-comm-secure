@@ -11,6 +11,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { PaywallCard } from '@/components/P2PPaymentComponents';
 import { lightningTools } from '@/lib/lightningToolsService';
 import { webrtcP2P, type MessageEnvelope } from '@/lib/p2p/webrtc-p2p';
+import { streamlinedPayments } from '@/lib/streamlined-payments';
 import QRAddressDisplay from './QRAddressDisplay';
 import QRAddressScanner from './QRAddressScanner';
 import { 
@@ -159,37 +160,19 @@ export function MessageComposer() {
 
     setIsSending(true);
 
-    const senderConnected = await lightningTools.initializeUserConnection(activeIdentity.address, `${activeIdentity.address}@getalby.com`)
-
-    if (!senderConnected) {
-      toast({
-        title: "Connection Error",
-        description: "Failed to connect to the Lightning network. Please check your connection.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    console.log('⚡ Lightning wallet connected');
-
-    // Process Payment
-    const paymentResult = await lightningTools.processP2PPayment({
-      fromUserId: activeIdentity.address,
-      toUserId: 'excitementresourceful193152@getalby.com',
-      amount: 10,
-      description: 'BitComm Message Fee'
-    });
+    // Perform streamlined payment using the new service
+    const paymentResult = await streamlinedPayments.processPayment(activeIdentity.address);
 
     if (!paymentResult.success) {
       toast({
-        title: "Payment Error",
-        description: `Failed to send sats: ${paymentResult.error}`,
+        title: "Payment Required",
+        description: "Please complete a simple payment to continue sending messages",
         variant: "destructive",
       });
       return;
     }
 
-    console.log('💰 Payment successful:', paymentResult);
+    console.log(`Payment successful using method: ${paymentResult.method}`);
     setIsComputing(true);
 
     try {
