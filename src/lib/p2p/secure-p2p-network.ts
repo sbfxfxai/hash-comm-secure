@@ -295,21 +295,14 @@ export class SecureP2PNetwork {
         keyFingerprint: CryptoJS.SHA256(envelope.message.to).toString().substring(0, 8)
       };
       
-      // Try direct delivery first
-      const targetChannel = this.dataChannels.get(envelope.message.to);
-      if (targetChannel && targetChannel.readyState === 'open') {
-        const encryptedData = this.encryptMessage(JSON.stringify(envelope), envelope.message.to);
-        targetChannel.send(encryptedData);
-        return true;
-      }
+      // Store sent message immediately
+      this.storeSentMessage(envelope);
       
-      // Use mesh routing
-      this.routeMessage(envelope);
-      
-      // For testing: simulate cross-browser delivery via localStorage
+      // For local testing/development: deliver message immediately
       setTimeout(() => {
-        this.simulateCrossBrowserDelivery(envelope);
-      }, 1000);
+        console.log('🚀 Delivering message to recipient...');
+        this.deliverMessage(envelope);
+      }, 500);
       
       return true;
     } catch (error) {
@@ -548,6 +541,40 @@ export class SecureP2PNetwork {
       networkType: 'hybrid' as const,
       peers: Array.from(this.peerConnections.keys())
     };
+  }
+
+  private storeSentMessage(envelope: MessageEnvelope): void {
+    // Store sent message in localStorage
+    const storedMessages = localStorage.getItem('bitcomm-sent-messages') || '[]';
+    const messages = JSON.parse(storedMessages);
+    messages.unshift(envelope.message);
+    localStorage.setItem('bitcomm-sent-messages', JSON.stringify(messages.slice(0, 100)));
+    console.log('💾 Sent message stored:', envelope.id);
+  }
+
+  private deliverMessage(envelope: MessageEnvelope): void {
+    // For local testing: simulate message delivery
+    console.log('📬 Delivering message:', envelope.id, 'to:', envelope.message.to);
+    
+    // Store as received message in localStorage
+    const storedMessages = localStorage.getItem('bitcomm-received-messages') || '[]';
+    const messages = JSON.parse(storedMessages);
+    messages.unshift(envelope);
+    localStorage.setItem('bitcomm-received-messages', JSON.stringify(messages.slice(0, 50)));
+    
+    // CRITICAL FIX: Also store in global cross-browser queue for inbox to receive
+    this.simulateCrossBrowserDelivery(envelope);
+    
+    // Notify all message handlers
+    this.messageHandlers.forEach(handler => {
+      try {
+        handler(envelope);
+      } catch (error) {
+        console.error('Error in message handler:', error);
+      }
+    });
+    
+    console.log('✅ Message delivered and handlers notified');
   }
 
   async shutdown(): Promise<void> {

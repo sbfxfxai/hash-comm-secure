@@ -1,0 +1,309 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\8020p\\bitcomm\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\8020p\\bitcomm\\src\\App.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\App.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\8020p\\bitcomm\\src\\components\\MessageComposer.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\components\\MessageComposer.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\8020p\\bitcomm\\src\\MessageComposer.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\MessageComposer.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\8020p\\bitcomm\\src\\components\\Inbox.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\components\\Inbox.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\8020p\\bitcomm\\src\\components\\IdentityManager.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\components\\IdentityManager.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\8020p\\bitcomm\\src\\components\\DomainSelector.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\components\\DomainSelector.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\8020p\\bitcomm\\src\\components\\CreditsModal.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\components\\CreditsModal.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\8020p\\bitcomm\\src\\components\\ContactManager.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\components\\ContactManager.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\8020p\\bitcomm\\src\\components\\BitcoinConnectComponents.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\components\\BitcoinConnectComponents.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\8020p\\bitcomm\\src\\components\\AuthModal.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\components\\AuthModal.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\8020p\\bitcomm\\src\\components\\AppSidebar.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\components\\AppSidebar.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\8020p\\bitcomm\\src\\components\\AlbyIntegrationTest.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\components\\AlbyIntegrationTest.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\8020p\\bitcomm\\src\\components\\AdminDashboard.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\components\\AdminDashboard.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\8020p\\bitcomm\\src\\main.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\8020p\\bitcomm\\signaling-server\\server.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:signaling-server\\server.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\8020p\\bitcomm\\index.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:index.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\8020p\\bitcomm\\src\\vite-env.d.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\vite-env.d.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 9,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "MessageComposer.tsx",
+              "DocumentMoniker": "C:\\Users\\8020p\\bitcomm\\src\\MessageComposer.tsx",
+              "RelativeDocumentMoniker": "src\\MessageComposer.tsx",
+              "ToolTip": "C:\\Users\\8020p\\bitcomm\\src\\MessageComposer.tsx",
+              "RelativeToolTip": "src\\MessageComposer.tsx",
+              "ViewState": "AgIAACkCAAAAAAAAAAAAAKUCAAAiAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2025-08-03T21:54:07.581Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "MessageComposer.tsx",
+              "DocumentMoniker": "C:\\Users\\8020p\\bitcomm\\src\\components\\MessageComposer.tsx",
+              "RelativeDocumentMoniker": "src\\components\\MessageComposer.tsx",
+              "ToolTip": "C:\\Users\\8020p\\bitcomm\\src\\components\\MessageComposer.tsx",
+              "RelativeToolTip": "src\\components\\MessageComposer.tsx",
+              "ViewState": "AgIAAE8DAAAAAAAAAAAAwFQDAAAuAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2025-08-03T21:50:10.991Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Inbox.tsx",
+              "DocumentMoniker": "C:\\Users\\8020p\\bitcomm\\src\\components\\Inbox.tsx",
+              "RelativeDocumentMoniker": "src\\components\\Inbox.tsx",
+              "ToolTip": "C:\\Users\\8020p\\bitcomm\\src\\components\\Inbox.tsx",
+              "RelativeToolTip": "src\\components\\Inbox.tsx",
+              "ViewState": "AgIAAEAAAAAAAAAAAAAjwFYAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2025-08-03T21:46:56.301Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "IdentityManager.tsx",
+              "DocumentMoniker": "C:\\Users\\8020p\\bitcomm\\src\\components\\IdentityManager.tsx",
+              "RelativeDocumentMoniker": "src\\components\\IdentityManager.tsx",
+              "ToolTip": "C:\\Users\\8020p\\bitcomm\\src\\components\\IdentityManager.tsx",
+              "RelativeToolTip": "src\\components\\IdentityManager.tsx",
+              "ViewState": "AgIAAKkAAAAAAAAAAAAjwL0AAAAlAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2025-08-03T21:45:14.366Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "DomainSelector.tsx",
+              "DocumentMoniker": "C:\\Users\\8020p\\bitcomm\\src\\components\\DomainSelector.tsx",
+              "RelativeDocumentMoniker": "src\\components\\DomainSelector.tsx",
+              "ToolTip": "C:\\Users\\8020p\\bitcomm\\src\\components\\DomainSelector.tsx",
+              "RelativeToolTip": "src\\components\\DomainSelector.tsx",
+              "ViewState": "AgIAACgAAAAAAAAAAAAjwDwAAAAbAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2025-08-03T21:36:46.291Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "CreditsModal.tsx",
+              "DocumentMoniker": "C:\\Users\\8020p\\bitcomm\\src\\components\\CreditsModal.tsx",
+              "RelativeDocumentMoniker": "src\\components\\CreditsModal.tsx",
+              "ToolTip": "C:\\Users\\8020p\\bitcomm\\src\\components\\CreditsModal.tsx",
+              "RelativeToolTip": "src\\components\\CreditsModal.tsx",
+              "ViewState": "AgIAAHYAAAAAAAAAAAAjwIcAAAATAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2025-08-03T21:33:16.365Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "ContactManager.tsx",
+              "DocumentMoniker": "C:\\Users\\8020p\\bitcomm\\src\\components\\ContactManager.tsx",
+              "RelativeDocumentMoniker": "src\\components\\ContactManager.tsx",
+              "ToolTip": "C:\\Users\\8020p\\bitcomm\\src\\components\\ContactManager.tsx",
+              "RelativeToolTip": "src\\components\\ContactManager.tsx",
+              "ViewState": "AgIAAK0BAAAAAAAAAAAjwMEBAAAHAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2025-08-03T21:25:46.418Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "BitcoinConnectComponents.tsx",
+              "DocumentMoniker": "C:\\Users\\8020p\\bitcomm\\src\\components\\BitcoinConnectComponents.tsx",
+              "RelativeDocumentMoniker": "src\\components\\BitcoinConnectComponents.tsx",
+              "ToolTip": "C:\\Users\\8020p\\bitcomm\\src\\components\\BitcoinConnectComponents.tsx",
+              "RelativeToolTip": "src\\components\\BitcoinConnectComponents.tsx",
+              "ViewState": "AgIAAO8AAAAAAAAAAAAAwBUBAABEAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2025-08-03T21:21:45.58Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "AuthModal.tsx",
+              "DocumentMoniker": "C:\\Users\\8020p\\bitcomm\\src\\components\\AuthModal.tsx",
+              "RelativeDocumentMoniker": "src\\components\\AuthModal.tsx",
+              "ToolTip": "C:\\Users\\8020p\\bitcomm\\src\\components\\AuthModal.tsx",
+              "RelativeToolTip": "src\\components\\AuthModal.tsx",
+              "ViewState": "AgIAALkAAAAAAAAAAAAAwN8AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2025-08-03T21:19:16.885Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "App.tsx",
+              "DocumentMoniker": "C:\\Users\\8020p\\bitcomm\\src\\App.tsx",
+              "RelativeDocumentMoniker": "src\\App.tsx",
+              "ToolTip": "C:\\Users\\8020p\\bitcomm\\src\\App.tsx",
+              "RelativeToolTip": "src\\App.tsx",
+              "ViewState": "AgIAAEADAAAAAAAAAAAAwGYDAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2025-08-03T20:38:03.008Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "AppSidebar.tsx",
+              "DocumentMoniker": "C:\\Users\\8020p\\bitcomm\\src\\components\\AppSidebar.tsx",
+              "RelativeDocumentMoniker": "src\\components\\AppSidebar.tsx",
+              "ToolTip": "C:\\Users\\8020p\\bitcomm\\src\\components\\AppSidebar.tsx",
+              "RelativeToolTip": "src\\components\\AppSidebar.tsx",
+              "ViewState": "AgIAAIMAAAAAAAAAAAAAAKkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2025-08-03T21:17:48.212Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "AlbyIntegrationTest.tsx",
+              "DocumentMoniker": "C:\\Users\\8020p\\bitcomm\\src\\components\\AlbyIntegrationTest.tsx",
+              "RelativeDocumentMoniker": "src\\components\\AlbyIntegrationTest.tsx",
+              "ToolTip": "C:\\Users\\8020p\\bitcomm\\src\\components\\AlbyIntegrationTest.tsx",
+              "RelativeToolTip": "src\\components\\AlbyIntegrationTest.tsx",
+              "ViewState": "AgIAAOICAAAAAAAAAAAAwAgDAAAjAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2025-08-03T21:13:26.562Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "AdminDashboard.tsx",
+              "DocumentMoniker": "C:\\Users\\8020p\\bitcomm\\src\\components\\AdminDashboard.tsx",
+              "RelativeDocumentMoniker": "src\\components\\AdminDashboard.tsx",
+              "ToolTip": "C:\\Users\\8020p\\bitcomm\\src\\components\\AdminDashboard.tsx",
+              "RelativeToolTip": "src\\components\\AdminDashboard.tsx",
+              "ViewState": "AgIAAIUBAAAAAAAAAAAAwKsBAAAdAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2025-08-03T21:11:11.176Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "server.js",
+              "DocumentMoniker": "C:\\Users\\8020p\\bitcomm\\signaling-server\\server.js",
+              "RelativeDocumentMoniker": "signaling-server\\server.js",
+              "ToolTip": "C:\\Users\\8020p\\bitcomm\\signaling-server\\server.js",
+              "RelativeToolTip": "signaling-server\\server.js",
+              "ViewState": "AgIAABsCAAAAAAAAAAAAADUCAAADAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2025-08-03T21:06:47.676Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "index.html",
+              "DocumentMoniker": "C:\\Users\\8020p\\bitcomm\\index.html",
+              "RelativeDocumentMoniker": "index.html",
+              "ToolTip": "C:\\Users\\8020p\\bitcomm\\index.html",
+              "RelativeToolTip": "index.html",
+              "ViewState": "AgIAAIsBAAAAAAAAAAAswLMBAAAHAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2025-08-03T20:48:50.508Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "vite-env.d.ts",
+              "DocumentMoniker": "C:\\Users\\8020p\\bitcomm\\src\\vite-env.d.ts",
+              "RelativeDocumentMoniker": "src\\vite-env.d.ts",
+              "ToolTip": "C:\\Users\\8020p\\bitcomm\\src\\vite-env.d.ts",
+              "RelativeToolTip": "src\\vite-env.d.ts",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2025-08-03T20:48:29.433Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "main.tsx",
+              "DocumentMoniker": "C:\\Users\\8020p\\bitcomm\\src\\main.tsx",
+              "RelativeDocumentMoniker": "src\\main.tsx",
+              "ToolTip": "C:\\Users\\8020p\\bitcomm\\src\\main.tsx",
+              "RelativeToolTip": "src\\main.tsx",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2025-08-03T20:40:49.763Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
