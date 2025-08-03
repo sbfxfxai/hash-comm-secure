@@ -10,7 +10,7 @@ import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PaywallCard } from '@/components/P2PPaymentComponents';
 import { lightningTools } from '@/lib/lightningToolsService';
-import { webrtcP2P, type MessageEnvelope } from '@/lib/p2p/webrtc-p2p';
+import { secureP2P, type MessageEnvelope } from '@/lib/p2p/secure-p2p-network';
 import { streamlinedPayments } from '@/lib/streamlined-payments';
 import QRAddressDisplay from './QRAddressDisplay';
 import QRAddressScanner from './QRAddressScanner';
@@ -225,19 +225,19 @@ export function MessageComposer() {
         signature: 'sender-signature-' + Date.now() // In production, use proper cryptographic signature
       };
 
-      // Send via simple P2P network (local simulation for now)
+      // Send via secure P2P network
       try {
-        const success = await webrtcP2P.sendMessage(envelope);
+        const success = await secureP2P.sendMessage(envelope);
         newMessage.delivered = success;
         
         toast({
-          title: success ? "Message Sent!" : "Message Saved!",
+          title: success ? "Message Sent Securely!" : "Message Saved!",
           description: success 
-            ? `Message processed successfully (${pow.computeTime.toFixed(2)}s PoW)`
+            ? `Message sent via encrypted P2P network (${pow.computeTime.toFixed(2)}s PoW)`
             : `Message saved locally (${pow.computeTime.toFixed(2)}s PoW)`,
         });
         
-        console.log(success ? '📤 Message processed' : '📝 Message saved locally');
+        console.log(success ? '🔐 Secure message sent' : '📝 Message saved locally');
       } catch (p2pError) {
         console.log('📝 P2P error - message saved locally:', p2pError);
         newMessage.delivered = false;

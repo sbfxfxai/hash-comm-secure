@@ -36,7 +36,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { webrtcP2P, type MessageEnvelope } from '@/lib/p2p/webrtc-p2p';
+import { secureP2P, type MessageEnvelope } from '@/lib/p2p/secure-p2p-network';
 import { decryptMessage } from '@/lib/bitcomm';
 
 // Types for inbox functionality
@@ -258,7 +258,7 @@ export const Inbox: React.FC = () => {
     };
 
     // Add P2P message handler
-    webrtcP2P.addMessageHandler(handleP2PMessage);
+    secureP2P.addMessageHandler(handleP2PMessage);
 
     // Load existing P2P messages from localStorage
     const storedP2PMessages = localStorage.getItem('bitcomm-received-messages');
@@ -273,7 +273,7 @@ export const Inbox: React.FC = () => {
           avatar: undefined
         },
         to: [envelope.message.to],
-        subject: 'P2P Message',
+        subject: 'Secure P2P Message',
         content: envelope.message.content,
         timestamp: envelope.message.timestamp,
         isRead: true, // Mark stored messages as read
@@ -294,7 +294,7 @@ export const Inbox: React.FC = () => {
 
     // Cleanup function
     return () => {
-      webrtcP2P.removeMessageHandler(handleP2PMessage);
+      secureP2P.removeMessageHandler(handleP2PMessage);
     };
   }, [toast]);
 
