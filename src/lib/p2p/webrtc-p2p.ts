@@ -57,14 +57,98 @@ export class WebRTCP2PNetwork {
   }
 
   private async connectToSignalingServer(): Promise<void> {
-    // Temporarily disabled to prevent CSP violations in production
-    console.log('🚀 P2P network disabled in production - using local messaging only');
-    
     return new Promise((resolve, reject) => {
-      // Skip signaling server connection for now
-      this.localPeerId = 'local-' + Math.random().toString(36).substr(2, 9);
-      this.registrationComplete = true;
-      resolve();
+      // Multiple signaling server URLs for redundancy
+      const signalingUrls = [
+        import.meta.env.VITE_SIGNALING_SERVER_URL,
+        'wss://bitcomm-signaling.fly.dev',
+        'wss://signaling.bitcomm.dev',
+        'wss://api.bitcomm.dev/signaling',
+        // As a last resort, use a public signaling service
+        'wss://ws.blockchain.info/inv'
+      ].filter(Boolean); // Remove undefined/null values
+      
+      let currentUrlIndex = 0;
+      
+      const tryConnect = () => {
+        if (currentUrlIndex >= signalingUrls.length) {
+          console.log('⏰ All signaling servers failed - proceeding with local-only mode');
+          this.localPeerId = 'local-' + Math.random().toString(36).substr(2, 9);
+          this.registrationComplete = true;
+          resolve();
+          return;
+        }
+        
+        const signalingUrl = signalingUrls[currentUrlIndex];
+        console.log(`🚀 Attempting to connect to signaling server [${currentUrlIndex + 1}/${signalingUrls.length}]:`, signalingUrl);
+        
+        try {
+          this.signalingSocket = new WebSocket(signalingUrl);
+          
+          this.signalingSocket.onopen = () => {
+            console.log('✅ Connected to signaling server:', signalingUrl);
+            
+            // Register with our BitComm address
+            this.signalingSocket!.send(JSON.stringify({
+              type: 'register',
+              bitcommAddress: this.bitcommAddress
+            }));
+          };
+          
+          this.signalingSocket.onmessage = (event) => {
+            try {
+              const message = JSON.parse(event.data);
+              this.handleSignalingMessage(message);
+            } catch (error) {
+              console.error('Error parsing signaling message:', error);
+            }
+          };
+          
+          this.signalingSocket.onclose = (event) => {
+            console.log('🔌 Signaling server connection closed:', event.code, event.reason);
+            if (this.isInitialized && this.registrationComplete) {
+              // Attempt to reconnect after a delay
+              setTimeout(() => {
+                console.log('🔄 Attempting to reconnect to signaling server...');
+                this.connectToSignalingServer();
+              }, 5000);
+            }
+          };
+          
+          this.signalingSocket.onerror = (error) => {
+            console.error(`❌ Signaling server connection error [${currentUrlIndex + 1}/${signalingUrls.length}]:`, error);
+            currentUrlIndex++;
+            setTimeout(tryConnect, 2000); // Try next server after 2 seconds
+          };
+          
+          // Set a timeout for each connection attempt
+          setTimeout(() => {
+            if (!this.registrationComplete && this.signalingSocket?.readyState !== WebSocket.OPEN) {
+              console.log(`⏰ Signaling server connection timeout [${currentUrlIndex + 1}/${signalingUrls.length}]`);
+              this.signalingSocket?.close();
+              currentUrlIndex++;
+              tryConnect();
+            }
+          }, 8000); // 8 second timeout per server
+          
+        } catch (error) {
+          console.error('Failed to create WebSocket connection:', error);
+          currentUrlIndex++;
+          setTimeout(tryConnect, 1000);
+        }
+      };
+      
+      tryConnect();
+      
+      // Final timeout for the entire connection process
+      setTimeout(() => {
+        if (!this.registrationComplete) {
+          console.log('⏰ All signaling servers failed - proceeding with local-only mode');
+          this.localPeerId = 'local-' + Math.random().toString(36).substr(2, 9);
+          this.registrationComplete = true;
+          resolve();
+        }
+      }, 30000); // 30 second total timeout
     });
   }
 

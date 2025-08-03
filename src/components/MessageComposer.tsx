@@ -225,35 +225,30 @@ export function MessageComposer() {
         signature: 'sender-signature-' + Date.now() // In production, use proper cryptographic signature
       };
 
-      // Send message through P2P network
-      console.log('📡 Sending message through P2P network...');
+      // Try to send via P2P network
       try {
-        const p2pSent = await webrtcP2P.sendMessage(envelope);
-        
-        if (p2pSent) {
+        const success = await webrtcP2P.sendMessage(envelope);
+        if (success) {
           newMessage.delivered = true;
-          console.log('✅ Message successfully sent through P2P network');
-          
+          console.log('📤 Message sent via P2P network');
           toast({
             title: "Message Sent!",
-            description: `Encrypted message delivered via P2P network (${pow.computeTime.toFixed(2)}s PoW)`,
+            description: `Message delivered via P2P network (${pow.computeTime.toFixed(2)}s PoW)`,
           });
         } else {
-          console.log('⚠️ P2P network unavailable, message queued locally');
-          
+          newMessage.delivered = false;
+          console.log('📝 No P2P peers available - message stored locally');
           toast({
-            title: "Message Queued",
-            description: "P2P network unavailable. Message will be sent when peers connect.",
-            variant: "default",
+            title: "Message Saved!",
+            description: `Message encrypted and stored locally (${pow.computeTime.toFixed(2)}s PoW). Will send when peers connect.`,
           });
         }
       } catch (p2pError) {
-        console.error('P2P send failed:', p2pError);
-        
+        console.log('📝 P2P network error - message stored locally:', p2pError);
+        newMessage.delivered = false;
         toast({
-          title: "P2P Send Failed",
-          description: "Message saved locally but could not be sent to network",
-          variant: "destructive",
+          title: "Message Saved!",
+          description: `Message encrypted and stored locally (${pow.computeTime.toFixed(2)}s PoW). P2P network unavailable.`,
         });
       }
 
