@@ -73,7 +73,7 @@ const navigationItems = [
   },
   {
     title: "Payments",
-    value: "lightning",
+    value: "payments",
     icon: CreditCard,
     description: "Lightning Network payments"
   },
