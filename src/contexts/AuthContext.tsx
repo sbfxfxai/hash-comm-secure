@@ -71,6 +71,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Store locally for decentralized auth
       storeDIDLocally(didUser)
+      
+      // Also store the complete identity data for the Identity Manager
+      const identityData = {
+        address: identity.did,
+        privateKey: identity.privateKey, // This should be encrypted in production
+        publicKey: identity.publicKey,
+        name: displayName,
+        isActive: !user, // If no user exists, this becomes the active identity
+        created: new Date().toISOString()
+      }
+      
+      // Add to identities list
+      const existingIdentities = JSON.parse(localStorage.getItem('bitcomm_identities') || '[]')
+      const updatedIdentities = [identityData, ...existingIdentities]
+      localStorage.setItem('bitcomm_identities', JSON.stringify(updatedIdentities))
+      
       setUser(didUser)
       
       toast.success('DID Identity created successfully!')
@@ -135,7 +151,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async (): Promise<void> => {
     try {
-      // Clear local storage
+      // Clear local storage but keep identities for re-authentication
       localStorage.removeItem('bitcomm_did_user')
       setUser(null)
       toast.info('Signed out successfully')

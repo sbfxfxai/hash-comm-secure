@@ -70,14 +70,9 @@ const PremiumIdentityService = {
     }
 };
 
-// Custom hook to replace useToast
-const useToast = () => ({
-    toast: ({ title, description, variant }: { title: string; description: string; variant?: string }) => {
-        // Simple alert replacement - in production, use a proper toast library
-        console.log(`${title}: ${description}`);
-        alert(`${title}: ${description}`);
-    }
-});
+// Import real hooks
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function IdentityManager() {
     const [identities, setIdentities] = useState<StoredIdentity[]>([]);
@@ -86,35 +81,70 @@ export function IdentityManager() {
     const [newIdentityName, setNewIdentityName] = useState('');
     const [isCreating, setIsCreating] = useState(false);
     const { toast } = useToast();
+    const { user, createDIDIdentity, isAuthenticated } = useAuth();
 
-    // Load identities from localStorage and Supabase on mount
+    // Load identities from localStorage and integrate with AuthContext
     useEffect(() => {
         const loadData = async () => {
-            // Load local identities - using in-memory storage for Claude artifacts
-            const mockIdentities: StoredIdentity[] = [
-                {
-                    address: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
-                    privateKey: 'KwDiBf89QgGbjEhKnhXJuH7LrciVrZi3qYjgd9M7rFU73sVHnoWn',
-                    publicKey: '0279BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798',
-                    created: new Date(),
-                    name: 'Personal',
-                    isActive: true
+            try {
+                // Load existing identities from localStorage
+                const storedIdentities = localStorage.getItem('bitcomm_identities');
+                let existingIdentities: StoredIdentity[] = [];
+                
+                if (storedIdentities) {
+                    existingIdentities = JSON.parse(storedIdentities).map((id: any) => ({
+                        ...id,
+                        created: new Date(id.created)
+                    }));
                 }
-            ];
-            setIdentities(mockIdentities);
 
-            // Load premium identities (assuming a logged-in user)
-            const user_id = '<USER_ID>'; // Replace with actual user ID
-            const premium = await PremiumIdentityService.getUserIdentities(user_id);
-            setPremiumIdentities(premium);
+                // If user is authenticated via AuthContext, ensure their identity is included
+                if (user) {
+                    const userIdentityExists = existingIdentities.some(id => id.address === user.did);
+                    if (!userIdentityExists) {
+                        const userIdentity: StoredIdentity = {
+                            address: user.did,
+                            privateKey: 'encrypted_private_key', // In production, this would be properly encrypted
+                            publicKey: user.publicKey,
+                            created: user.createdAt,
+                            name: user.displayName || 'Main Identity',
+                            isActive: existingIdentities.length === 0
+                        };
+                        existingIdentities.unshift(userIdentity);
+                    }
+                }
+
+                setIdentities(existingIdentities);
+
+                // Load premium identities if user exists
+                if (user) {
+                    const premium = await PremiumIdentityService.getUserIdentities(user.did);
+                    setPremiumIdentities(premium);
+                }
+            } catch (error) {
+                console.error('Failed to load identities:', error);
+            }
         };
         loadData();
-    }, []);
+    }, [user]);
 
-    // Save identities to localStorage (mock for Claude)
+    // Save identities to localStorage
     const saveIdentities = (newIdentities: StoredIdentity[]) => {
-        // In a real app, this would save to localStorage
-        setIdentities(newIdentities);
+        try {
+            const identitiesToStore = newIdentities.map(id => ({
+                ...id,
+                created: id.created.toISOString()
+            }));
+            localStorage.setItem('bitcomm_identities', JSON.stringify(identitiesToStore));
+            setIdentities(newIdentities);
+        } catch (error) {
+            console.error('Failed to save identities:', error);
+            toast({
+                title: "Save Failed",
+                description: "Failed to save identities to local storage.",
+                variant: "destructive"
+            });
+        }
     };
 
     const createIdentity = async () => {
@@ -130,29 +160,24 @@ export function IdentityManager() {
         setIsCreating(true);
 
         try {
-            // Simulate blockchain registration delay
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            // Use the AuthContext's createDIDIdentity for consistency
+            const result = await createDIDIdentity(newIdentityName.trim());
+            
+            if (result.error) {
+                throw new Error(result.error);
+            }
 
-            const identity = generateBitCommIdentity();
-            const newIdentity: StoredIdentity = {
-                ...identity,
-                name: newIdentityName.trim(),
-                isActive: identities.length === 0 // First identity is active by default
-            };
-
-            const updatedIdentities = [...identities, newIdentity];
-            saveIdentities(updatedIdentities);
-
+            // The identity will be automatically added to the list via the useEffect
             setNewIdentityName('');
 
             toast({
                 title: "Identity Created!",
-                description: `BitComm address ${newIdentity.address.substring(0, 12)}... registered on Bitcoin blockchain.`,
+                description: `DID identity created and registered successfully.`,
             });
         } catch (error) {
             toast({
                 title: "Creation Failed",
-                description: "Failed to create identity. Please try again.",
+                description: error instanceof Error ? error.message : "Failed to create identity. Please try again.",
                 variant: "destructive",
             });
         } finally {
